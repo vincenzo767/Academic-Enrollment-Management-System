@@ -1,0 +1,5 @@
+.wrap{display:flex;gap:12px;align-items:center}
+.avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#17324f;color:#fff;font-weight:700}
+.meta{display:flex;flex-direction:column}
+.name{font-weight:600}
+.id{font-size:12px;opacity:.8}

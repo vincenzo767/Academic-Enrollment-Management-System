@@ -1,0 +1,13 @@
+.wrap{display:grid;gap:16px}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpiLabel{font-size:12px;color:#6b7280}
+.kpiValue{font-size:28px;font-weight:800}
+.kpiSub{font-size:12px;color:#9ca3af}
+.sectionTitle{margin-top:8px}
+.table{display:grid;border:1px solid #eee;border-radius:8px;overflow:hidden}
+.row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:12px;border-top:1px solid #eee;background:#fff}
+.head{background:#f9fafb;font-weight:700}
+.status{padding:4px 8px;border-radius:999px;font-weight:700}
+.Pending{background:#fef3c7;color:#78350f}
+.Overdue{background:#fee2e2;color:#7f1d1d}
+.Paid{background:#dcfce7;color:#14532d}

@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+:root{
+  --navy:#0c2239;
+  --navy-2:#0f2d4b;
+  --bg:#f4f5f7;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --accent:#ffcc00;
+  --accent-2:#2f80ed;
+  --success:#28a745;
+  --warning:#f2c94c;
+  --danger:#eb5757;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu; background:var(--bg); color:#111}
+
+.btn{background:var(--accent);border:0;padding:8px 16px;border-radius:20px;font-weight:600;cursor:pointer}
+.btn:hover{filter:brightness(.95)}
+.btn-outline{background:transparent;border:2px solid var(--accent-2);padding:6px 12px;border-radius:20px;color:var(--accent-2);font-weight:600;cursor:pointer}
+
+input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:6px;outline:none}
+
+h2{margin:0}
