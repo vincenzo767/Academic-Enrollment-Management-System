@@ -1,15 +1,18 @@
 import React from 'react'
 import { payments, paymentSummary } from '../state/mockData.js'
 import styles from '../styles/payments.module.css'
+import { useApp } from '../state/AppContext.js'
 
 export default function Payments(){
+  const { billing } = useApp()
+
   return (
     <div className={styles.wrap}>
       <div className={styles.summary}>
         <div>
-          <div className={styles.kpiLabel}>Total Due</div>
-          <div className={styles.kpiValue}>{paymentSummary.totalDue.toLocaleString()}</div>
-          <div className={styles.kpiSub}>Outstanding balance</div>
+          <div className={styles.kpiLabel}>Total Due (selected)</div>
+          <div className={styles.kpiValue}>${billing.total.toLocaleString()}</div>
+          <div className={styles.kpiSub}>{billing.units} units selected • ${billing.perUnit}/unit</div>
         </div>
         <div>
           <div className={styles.kpiLabel}>Paid this year</div>

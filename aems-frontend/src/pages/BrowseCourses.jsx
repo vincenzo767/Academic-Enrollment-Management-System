@@ -1,37 +1,37 @@
 import React, { useMemo, useState } from 'react'
 import CourseCard from '../components/CourseCard.jsx'
 import Modal from '../components/Modal.jsx'
-import { courses as initialCourses } from '../state/mockData.js'
 import styles from '../styles/browse.module.css'
+import { useApp } from '../state/AppContext.js'
 
 export default function BrowseCourses(){
   const [query, setQuery] = useState('')
-  const [courses, setCourses] = useState(initialCourses)
   const [modal, setModal] = useState(null) // {type: 'success'|'conflict', course}
+  const { filteredCourses, departments, department, setDepartment, toggleReserve, enrollCourse } = useApp()
 
   function enroll(course){
     if(course.conflict){
       setModal({type:'conflict', course})
     } else {
       setModal({type:'success', course})
-      setCourses(prev => prev.map(c => c.id===course.id ? {...c, enrolled:true} : c))
+      enrollCourse(course.id)
     }
   }
 
   const filtered = useMemo(()=>{
     const q = query.trim().toLowerCase()
-    if(!q) return courses
-    return courses.filter(c=>
-      c.code.toLowerCase().includes(q) ||
-      c.title.toLowerCase().includes(q) ||
-      c.instructor.toLowerCase().includes(q)
-    )
-  },[query, courses])
+    let list = filteredCourses
+    if(q) list = list.filter(c=> c.code.toLowerCase().includes(q) || c.title.toLowerCase().includes(q) || c.instructor.toLowerCase().includes(q))
+    return list
+  },[query, filteredCourses])
 
   return (
     <div>
-      <div className={styles.searchRow}>
+      <div className={styles.searchRow} style={{display:'flex', gap:12, alignItems:'center'}}>
         <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search by course, name, code or department..." />
+        <select value={department} onChange={e=>setDepartment(e.target.value)}>
+          {departments.map(d=> <option key={d} value={d}>{d}</option>)}
+        </select>
       </div>
       <div className={styles.grid}>
         {filtered.map(c => (

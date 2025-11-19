@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
-import { myCourses as initial } from '../state/mockData.js'
+import React from 'react'
 import styles from '../styles/mycourses.module.css'
+import { useApp } from '../state/AppContext.js'
 
 export default function MyCourses(){
-  const [list, setList] = useState(initial)
-  const drop = (id) => setList(prev => prev.filter(c => c.id !== id))
+  const { courses, enrolledIds, dropCourse } = useApp()
+  const list = courses.filter(c=> enrolledIds.includes(c.id))
 
   return (
     <div className={styles.wrap}>
@@ -21,7 +21,7 @@ export default function MyCourses(){
           </div>
           <div className={styles.actions}>
             <span className={styles.badge}>Enrolled</span>
-            <button className="btn-outline" onClick={()=>drop(c.id)}>Drop Course</button>
+            <button className="btn-outline" onClick={()=>dropCourse(c.id)}>Drop Course</button>
           </div>
         </div>
       ))}

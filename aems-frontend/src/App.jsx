@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Login from './pages/Login.jsx'
 import PortalLayout from './layouts/PortalLayout.jsx'
 import BrowseCourses from './pages/BrowseCourses.jsx'
@@ -11,10 +11,17 @@ import FacultyPortalLayout from './layouts/FacultyPortalLayout.jsx'
 import FacultyCourses from './pages/FacultyCourses.jsx'
 import FacultyStudents from './pages/FacultyStudents.jsx'
 import FacultyReports from './pages/FacultyReports.jsx'
+import { AppProvider } from './state/AppContext.jsx'
+import Notifications from './components/Notifications.jsx'
 
 export default function App() {
+  const location = useLocation()
+  const isLogin = location && location.pathname === '/login'
+
   return (
-    <Routes>
+    <AppProvider>
+      {!isLogin && <Notifications />}
+      <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
 
@@ -35,6 +42,7 @@ export default function App() {
       </Route>
 
       <Route path="*" element={<div style={{padding: 24}}>Not Found</div>} />
-    </Routes>
+      </Routes>
+    </AppProvider>
   )
 }

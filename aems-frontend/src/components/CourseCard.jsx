@@ -1,7 +1,12 @@
 import React from 'react'
+import { useApp } from '../state/AppContext.js'
 import styles from '../styles/coursecard.module.css'
 
 export default function CourseCard({course, onEnroll}){
+  const {reservedIds, toggleReserve, enrolledIds} = useApp()
+  const reserved = reservedIds.includes(course.id)
+  const enrolled = enrolledIds.includes(course.id) || course.enrolled
+
   return (
     <div className={styles.card}>
       <div className={styles.left}>
@@ -15,17 +20,20 @@ export default function CourseCard({course, onEnroll}){
         </ul>
       </div>
       <div className={styles.right}>
-        {course.enrolled ? (
+        {enrolled ? (
           <span className={styles.badgeGreen}>Enrolled</span>
         ) : course.conflict ? (
           <span className={styles.badgeYellow}>Conflict</span>
         ) : null}
 
-        {!course.enrolled && (
+        <div style={{display:'flex', gap:8, flexDirection:'column', alignItems:'flex-end'}}>
           <button className="btn" onClick={onEnroll}>
             {course.conflict ? 'Enroll Anyway' : 'Enroll'}
           </button>
-        )}
+          <button className={reserved ? 'btn-outline active' : 'btn-outline'} onClick={()=>toggleReserve(course.id)}>
+            {reserved ? 'Reserved' : 'Reserve'}
+          </button>
+        </div>
       </div>
     </div>
   )
