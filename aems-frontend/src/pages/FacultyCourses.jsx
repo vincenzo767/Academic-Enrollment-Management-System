@@ -1,6 +1,39 @@
-import React from 'react'
+import React, { useState } from 'react'
+import Modal from '../components/Modal'
 
 export default function FacultyCourses(){
+  const [courses, setCourses] = useState([
+    {code:'CS101',name:'Intro to CS',instructor:'Dr. Sarah Johnson',dept:'Computer Science',units:3,enroll:'5/30 17%'},
+    {code:'MATH201',name:'Calculus II',instructor:'Prof. Michael Chen',dept:'Mathematics',units:4,enroll:'28/40 70%'},
+    {code:'ENG102',name:'Academic Writing',instructor:'Dr. Emily Brown',dept:'English',units:3,enroll:'20/25 80%'},
+  ])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingCourse, setEditingCourse] = useState(null)
+  const [formData, setFormData] = useState({code:'',name:'',instructor:'',dept:'',units:1,enroll:''})
+
+  const handleEdit = (course) => {
+    setEditingCourse(course)
+    setFormData({...course})
+    setIsModalOpen(true)
+  }
+
+  const handleSave = () => {
+    if (editingCourse) {
+      setCourses(courses.map(c => c.code === editingCourse.code ? formData : c))
+    } else {
+      setCourses([...courses, formData])
+    }
+    setIsModalOpen(false)
+    setEditingCourse(null)
+    setFormData({code:'',name:'',instructor:'',dept:'',units:1,enroll:''})
+  }
+
+  const handleDelete = (course) => {
+    if (window.confirm(`Are you sure you want to delete ${course.name}?`)) {
+      setCourses(courses.filter(c => c.code !== course.code))
+    }
+  }
+
   return (
     <div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:24}}>
@@ -45,11 +78,7 @@ export default function FacultyCourses(){
             </tr>
           </thead>
           <tbody>
-            {[
-              {code:'CS101',name:'Intro to CS',instructor:'Dr. Sarah Johnson',dept:'Computer Science',units:3,enroll:'5/30 17%'},
-              {code:'MATH201',name:'Calculus II',instructor:'Prof. Michael Chen',dept:'Mathematics',units:4,enroll:'28/40 70%'},
-              {code:'ENG102',name:'Academic Writing',instructor:'Dr. Emily Brown',dept:'English',units:3,enroll:'20/25 80%'},
-            ].map((r)=> (
+            {courses.map((r)=> (
               <tr key={r.code}>
                 <td>{r.code}</td>
                 <td>{r.name}</td>
@@ -58,14 +87,67 @@ export default function FacultyCourses(){
                 <td>{r.units}</td>
                 <td>{r.enroll}</td>
                 <td>
-                  <button style={{marginRight:8}}>✏️</button>
-                  <button>🗑️</button>
+                  <button onClick={() => handleEdit(r)} style={{marginRight:8}}>✏️</button>
+                  <button onClick={() => handleDelete(r)}>🗑️</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {isModalOpen && (
+        <Modal onClose={() => setIsModalOpen(false)}>
+          <h3>{editingCourse ? 'Edit Course' : 'Add Course'}</h3>
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            <input
+              type="text"
+              placeholder="Course Code"
+              value={formData.code}
+              onChange={(e) => setFormData({...formData, code: e.target.value})}
+              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
+            />
+            <input
+              type="text"
+              placeholder="Course Name"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
+            />
+            <input
+              type="text"
+              placeholder="Instructor"
+              value={formData.instructor}
+              onChange={(e) => setFormData({...formData, instructor: e.target.value})}
+              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
+            />
+            <input
+              type="text"
+              placeholder="Department"
+              value={formData.dept}
+              onChange={(e) => setFormData({...formData, dept: e.target.value})}
+              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
+            />
+            <input
+              type="number"
+              placeholder="Units"
+              value={formData.units}
+              onChange={(e) => setFormData({...formData, units: parseInt(e.target.value)})}
+              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
+            />
+            <input
+              type="text"
+              placeholder="Enrollment (e.g., 5/30 17%)"
+              value={formData.enroll}
+              onChange={(e) => setFormData({...formData, enroll: e.target.value})}
+              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
+            />
+            <button onClick={handleSave} style={{padding:12,background:'#007bff',color:'white',border:'none',borderRadius:4,cursor:'pointer'}}>
+              {editingCourse ? 'Save Changes' : 'Add Course'}
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
