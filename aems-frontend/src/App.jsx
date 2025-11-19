@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Login from './pages/Login.jsx'
+import Starter from './pages/Starter.jsx'
 import PortalLayout from './layouts/PortalLayout.jsx'
 import BrowseCourses from './pages/BrowseCourses.jsx'
 import MyCourses from './pages/MyCourses.jsx'
@@ -17,12 +18,13 @@ import Notifications from './components/Notifications.jsx'
 export default function App() {
   const location = useLocation()
   const isLogin = location && location.pathname === '/login'
+  const isRoot = location && (location.pathname === '/' || location.pathname === '')
 
   return (
     <AppProvider>
-      {!isLogin && <Notifications />}
+      {!(isLogin || isRoot) && <Notifications />}
       <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Starter />} />
       <Route path="/login" element={<Login />} />
 
       <Route path="/portal" element={<PortalLayout />}>
