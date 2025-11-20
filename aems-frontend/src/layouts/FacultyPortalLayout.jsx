@@ -2,10 +2,14 @@ import React from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import styles from '../styles/layout.module.css'
 import UserAvatar from '../components/UserAvatar.jsx'
+import { useApp } from '../state/AppContext.js'
+import { useEffect } from 'react'
 
 export default function FacultyPortalLayout(){
   const navigate = useNavigate()
-  const logout = () => navigate('/faculty-login')
+  const { setRole } = useApp()
+  useEffect(()=>{ setRole && setRole('faculty') }, [setRole])
+  const logout = () => { setRole && setRole(null); navigate('/faculty-login') }
 
   return (
     <div className={styles.shell}>

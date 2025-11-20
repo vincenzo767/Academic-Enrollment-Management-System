@@ -41,11 +41,13 @@ export function AppProvider({children}){
   const [reservedIds, setReservedIds] = useState([])
   const [enrolledIds, setEnrolledIds] = useState([])
   const [notifications, setNotifications] = useState([])
+  // role can be 'student' | 'faculty' | 'admin' | null
+  const [role, setRole] = useState(null)
   const perUnit = 500 // fee per unit (demo)
 
-  // helper: add structured notification
-  const addNotification = ({text, type = 'info', courseId = null}) => {
-    const n = { id: Date.now() + Math.floor(Math.random()*1000), text, type, courseId, timestamp: new Date().toISOString(), read: false }
+  // helper: add structured notification; accepts optional `role` to scope recipients
+  const addNotification = ({text, type = 'info', courseId = null, targetRole = null}) => {
+    const n = { id: Date.now() + Math.floor(Math.random()*1000), text, type, courseId, timestamp: new Date().toISOString(), read: false, role: targetRole || role || 'all' }
     setNotifications(prev => [n, ...prev])
   }
 
@@ -104,8 +106,9 @@ export function AppProvider({children}){
     setNotifications(prev => prev.map(n => n.id === nid ? {...n, read:true} : n))
   }
 
-  const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({...n, read:true})))
+  const markAllRead = (targetRole = null) => {
+    const roleToMark = targetRole || role || 'all'
+    setNotifications(prev => prev.map(n => (n.role === 'all' || n.role === roleToMark) ? {...n, read:true} : n))
   }
 
   const departments = useMemo(()=>{
@@ -139,7 +142,7 @@ export function AppProvider({children}){
     return {units, perUnit, total: units * perUnit}
   },[courses,reservedIds,enrolledIds])
 
-  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing}
+  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole}
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }

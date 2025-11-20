@@ -2,10 +2,12 @@ import React, { useState } from 'react'
 import { useApp } from '../state/AppContext.js'
 
 export default function Notifications(){
-  const { notifications = [], markAsRead, markAllRead } = useApp()
+  const { notifications = [], markAsRead, markAllRead, role } = useApp()
   const [open, setOpen] = useState(false)
 
-  const unread = notifications.filter(n=> !n.read)
+  // only show notifications relevant to current role (or 'all')
+  const visible = notifications.filter(n => !n.role || n.role === 'all' || (role && n.role === role))
+  const unread = visible.filter(n=> !n.read)
 
   return (
     <div style={{position:'fixed', right:16, top:16, zIndex:9999, fontFamily:'sans-serif'}}>
@@ -23,8 +25,8 @@ export default function Notifications(){
             </div>
           </div>
           <div>
-            {notifications.length === 0 && <div style={{padding:12, color:'#666'}}>No notifications</div>}
-            {notifications.map(n => (
+            {visible.length === 0 && <div style={{padding:12, color:'#666'}}>No notifications</div>}
+            {visible.map(n => (
               <div key={n.id} style={{padding:12, borderBottom:'1px solid #f4f4f4', background: n.read ? '#fff' : '#eef6ff'}}>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                   <div style={{fontSize:13, fontWeight: n.read ? 500 : 700}}>{n.text}</div>
