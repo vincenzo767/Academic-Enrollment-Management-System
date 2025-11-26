@@ -8,11 +8,11 @@
 		<version>3.5.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.appdev.betaems</groupId>
-	<artifactId>batawangg4</artifactId>
+	<groupId>com.appdevg4</groupId>
+	<artifactId>betaems</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>batawangg4</name>
-	<description>Demo project for Spring Boot</description>
+	<name>AEMS</name>
+	<description>A comprehensive system for managing student enrollment, payments, and course scheduling</description>
 	<url/>
 	<licenses>
 		<license/>
