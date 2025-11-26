@@ -1,0 +1,46 @@
+package com.appdev.betaems.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "courses")
+public class Courses {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long courseId;
+
+    private String courseCode;
+    private String title;
+    private String description;
+    private Integer credits;
+    private Long instructorId;
+
+    public Courses() {}
+
+    public Courses(String courseCode, String title, String description, Integer credits, Long instructorId) {
+        this.courseCode = courseCode;
+        this.title = title;
+        this.description = description;
+        this.credits = credits;
+        this.instructorId = instructorId;
+    }
+
+    public Long getCourseId() { return courseId; }
+    public void setCourseId(Long courseId) { this.courseId = courseId; }
+
+    public String getCourseCode() { return courseCode; }
+    public void setCourseCode(String courseCode) { this.courseCode = courseCode; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public Integer getCredits() { return credits; }
+    public void setCredits(Integer credits) { this.credits = credits; }
+
+    public Long getInstructorId() { return instructorId; }
+    public void setInstructorId(Long instructorId) { this.instructorId = instructorId; }
+}
