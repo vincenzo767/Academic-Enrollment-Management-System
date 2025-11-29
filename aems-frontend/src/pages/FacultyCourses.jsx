@@ -1,41 +1,52 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
+import { useApp } from '../state/AppContext.jsx'
 
 export default function FacultyCourses(){
-  const [courses, setCourses] = useState([
-    {code:'CS101',name:'Intro to CS',instructor:'Dr. Sarah Johnson',dept:'Computer Science',units:3,enroll:'5/30 17%'},
-    {code:'MATH201',name:'Calculus II',instructor:'Prof. Michael Chen',dept:'Mathematics',units:4,enroll:'28/40 70%'},
-    {code:'ENG102',name:'Academic Writing',instructor:'Dr. Emily Brown',dept:'English',units:3,enroll:'20/25 80%'},
-  ])
+  const { courses, createCourse, updateCourse, deleteCourseById } = useApp()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCourse, setEditingCourse] = useState(null)
-  const [formData, setFormData] = useState({code:'',name:'',instructor:'',dept:'',units:1,enroll:''})
+  const [formData, setFormData] = useState({ code:'', title:'', description:'', credits:3, instructorId: null })
 
   const handleEdit = (course) => {
     setEditingCourse(course)
-    setFormData({...course})
+    setFormData({ code: course.code, title: course.name || course.title, description: course.subtitle || course.description || '', credits: course.units || course.credits || 3, instructorId: course.instructor || null })
     setIsModalOpen(true)
   }
 
-  const handleSave = () => {
-    if (editingCourse) {
-      setCourses(courses.map(c => c.code === editingCourse.code ? formData : c))
-    } else {
-      setCourses([...courses, formData])
+  const handleSave = async () => {
+    try{
+      if (editingCourse) {
+        // editingCourse has id or code
+        const id = editingCourse.id || editingCourse.courseId
+        const payload = { courseCode: formData.code, title: formData.title, description: formData.description, credits: formData.credits, instructorId: formData.instructorId }
+        await updateCourse(id, payload)
+      } else {
+        const payload = { courseCode: formData.code, title: formData.title, description: formData.description, credits: formData.credits, instructorId: formData.instructorId }
+        await createCourse(payload)
+      }
+      setIsModalOpen(false)
+      setEditingCourse(null)
+      setFormData({code:'', title:'', description:'', credits:3, instructorId: null})
+    } catch(e){
+      alert('Failed to save course')
     }
-    setIsModalOpen(false)
-    setEditingCourse(null)
-    setFormData({code:'',name:'',instructor:'',dept:'',units:1,enroll:''})
   }
 
-  const handleDelete = (course) => {
-    if (window.confirm(`Are you sure you want to delete ${course.name}?`)) {
-      setCourses(courses.filter(c => c.code !== course.code))
+  const handleDelete = async (course) => {
+    if (window.confirm(`Are you sure you want to delete ${course.title || course.name}?`)) {
+      try{
+        const id = course.id || course.courseId
+        await deleteCourseById(id)
+      } catch(e){ alert('Delete failed') }
     }
   }
 
   return (
     <div>
+      <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}>
+        <button onClick={() => setIsModalOpen(true)} style={{padding:'8px 12px',background:'#28a745',color:'#fff',border:'none',borderRadius:6,cursor:'pointer'}}>Add Course</button>
+      </div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:24}}>
         <div style={{background:'#eee',padding:16,borderRadius:8}}>
           <div>Total Courses</div>
@@ -79,13 +90,13 @@ export default function FacultyCourses(){
           </thead>
           <tbody>
             {courses.map((r)=> (
-              <tr key={r.code}>
+              <tr key={r.id || r.courseId}>
                 <td>{r.code}</td>
-                <td>{r.name}</td>
+                <td>{r.title}</td>
                 <td>{r.instructor}</td>
-                <td>{r.dept}</td>
+                <td>{r.dept || ''}</td>
                 <td>{r.units}</td>
-                <td>{r.enroll}</td>
+                <td>{r.enroll || ''}</td>
                 <td>
                   <button onClick={() => handleEdit(r)} style={{marginRight:8}}>✏️</button>
                   <button onClick={() => handleDelete(r)}>🗑️</button>
@@ -109,37 +120,29 @@ export default function FacultyCourses(){
             />
             <input
               type="text"
-              placeholder="Course Name"
-              value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              placeholder="Course Title"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
               style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
+            />
+            <textarea
+              placeholder="Description"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              style={{padding:8,border:'1px solid #ccc',borderRadius:4,minHeight:80}}
             />
             <input
               type="text"
-              placeholder="Instructor"
-              value={formData.instructor}
-              onChange={(e) => setFormData({...formData, instructor: e.target.value})}
-              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
-            />
-            <input
-              type="text"
-              placeholder="Department"
-              value={formData.dept}
-              onChange={(e) => setFormData({...formData, dept: e.target.value})}
+              placeholder="Instructor ID"
+              value={formData.instructorId || ''}
+              onChange={(e) => setFormData({...formData, instructorId: e.target.value})}
               style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
             />
             <input
               type="number"
-              placeholder="Units"
-              value={formData.units}
-              onChange={(e) => setFormData({...formData, units: parseInt(e.target.value)})}
-              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
-            />
-            <input
-              type="text"
-              placeholder="Enrollment (e.g., 5/30 17%)"
-              value={formData.enroll}
-              onChange={(e) => setFormData({...formData, enroll: e.target.value})}
+              placeholder="Credits"
+              value={formData.credits}
+              onChange={(e) => setFormData({...formData, credits: parseInt(e.target.value)})}
               style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
             />
             <button onClick={handleSave} style={{padding:12,background:'#007bff',color:'white',border:'none',borderRadius:4,cursor:'pointer'}}>

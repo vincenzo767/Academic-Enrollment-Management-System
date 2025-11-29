@@ -9,7 +9,10 @@ export default function Starter(){
       <div className={styles.inner}>
         <h1 className={styles.title}>AEMS: Academic Enrollment<br/>Management System</h1>
         <p className={styles.lead}>Discover how AEMS transforms your school's enrollment process using smart automation, organized workflows, and an easy-to-use interface designed for both students and administrators.</p>
-        <button className={styles.signin} onClick={()=>navigate('/login')}>Sign in</button>
+        <div className={styles.buttonGroup}>
+          <button className={styles.signin} onClick={()=>navigate('/login')}>Sign in</button>
+          <button className={styles.register} onClick={()=>navigate('/register')}>Register</button>
+        </div>
 
         <div className={styles.featuresWrap}>
           <div className={styles.features}>

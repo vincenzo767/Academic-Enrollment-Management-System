@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
 import Starter from './pages/Starter.jsx'
 import PortalLayout from './layouts/PortalLayout.jsx'
 import BrowseCourses from './pages/BrowseCourses.jsx'
@@ -19,13 +20,16 @@ export default function App() {
   const location = useLocation()
   const isLogin = location && location.pathname === '/login'
   const isRoot = location && (location.pathname === '/' || location.pathname === '')
+  const isRegister = location && location.pathname === '/register'
+  const isFacultyLogin = location && location.pathname === '/faculty-login'
 
   return (
     <AppProvider>
-      {!(isLogin || isRoot) && <Notifications />}
+      {!(isLogin || isRoot || isRegister || isFacultyLogin) && <Notifications />}
       <Routes>
       <Route path="/" element={<Starter />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
       <Route path="/portal" element={<PortalLayout />}>
         <Route index element={<Navigate to="browse" replace />} />

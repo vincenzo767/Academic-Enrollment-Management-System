@@ -7,3 +7,6 @@
 .card input{background:#1f3347;border:0;color:#fff}
 .card button{background:#ffcc00;border:0;padding:10px;border-radius:6px;font-weight:700;cursor:pointer}
 .facultyNote{font-size:12px;color:#bcd}
+.links{font-size:12px;color:#bcd;margin:8px 0;display:flex;justify-content:center;gap:8px;align-items:center}
+.linkButton{background:none;border:none;color:#bcd;cursor:pointer;padding:0;font-size:12px;text-decoration:none}
+.linkButton:hover{color:#fff;text-decoration:underline}

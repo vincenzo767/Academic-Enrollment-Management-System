@@ -45,6 +45,65 @@ export function AppProvider({children}){
   const [role, setRole] = useState(null)
   const perUnit = 500 // fee per unit (demo)
 
+  // load courses from backend and provide CRUD helpers
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/courses')
+        if (!res.ok) return
+        const data = await res.json()
+        const mapped = data.map(c => ({
+          id: c.courseId,
+          code: c.courseCode || c.code || '',
+          title: c.title || c.name || '',
+          subtitle: c.description || '',
+          units: c.credits || c.units || 0,
+          instructor: c.instructorId ? String(c.instructorId) : (c.instructor || ''),
+          schedule: c.schedule || '',
+        }))
+        setCourses(mapped)
+      } catch (e) {
+        console.error('Could not load courses from API', e)
+      }
+    }
+    loadCourses()
+  }, [])
+
+  // CRUD helpers for courses
+  const createCourse = async (course) => {
+    // course: { courseCode, title, description, credits, instructorId }
+    try {
+      const res = await fetch('http://localhost:8080/api/courses', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(course)
+      })
+      if(!res.ok) throw new Error('Create failed')
+      const created = await res.json()
+      setCourses(prev => [{ id: created.courseId, code: created.courseCode, title: created.title, subtitle: created.description, units: created.credits, instructor: created.instructorId ? String(created.instructorId) : '' }, ...prev])
+      return created
+    } catch (e) {
+      console.error(e)
+      throw e
+    }
+  }
+
+  const updateCourse = async (id, course) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/courses/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(course) })
+      if(!res.ok) throw new Error('Update failed')
+      const updated = await res.json()
+      setCourses(prev => prev.map(c => c.id === updated.courseId ? { id: updated.courseId, code: updated.courseCode, title: updated.title, subtitle: updated.description, units: updated.credits, instructor: updated.instructorId ? String(updated.instructorId) : '' } : c))
+      return updated
+    } catch(e){ console.error(e); throw e }
+  }
+
+  const deleteCourseById = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/courses/${id}`, { method:'DELETE' })
+      if(res.ok){ setCourses(prev => prev.filter(c => c.id !== id)) }
+      else throw new Error('Delete failed')
+    } catch(e){ console.error(e); throw e }
+  }
+
   // helper: add structured notification; accepts optional `role` to scope recipients
   const addNotification = ({text, type = 'info', courseId = null, targetRole = null}) => {
     const n = { id: Date.now() + Math.floor(Math.random()*1000), text, type, courseId, timestamp: new Date().toISOString(), read: false, role: targetRole || role || 'all' }
@@ -143,6 +202,11 @@ export function AppProvider({children}){
   },[courses,reservedIds,enrolledIds])
 
   const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole}
+
+  // expose course CRUD helpers
+  value.createCourse = createCourse
+  value.updateCourse = updateCourse
+  value.deleteCourseById = deleteCourseById
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }
