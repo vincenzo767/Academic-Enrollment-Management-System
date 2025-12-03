@@ -1,6 +1,10 @@
 package com.appdev.betaems.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "courses")
@@ -15,6 +19,8 @@ public class Courses {
     private String description;
     private Integer credits;
     private Long instructorId;
+    private Integer totalCapacity;
+    private Integer availableSlots;
 
     public Courses() {}
 
@@ -24,6 +30,16 @@ public class Courses {
         this.description = description;
         this.credits = credits;
         this.instructorId = instructorId;
+    }
+
+    public Courses(String courseCode, String title, String description, Integer credits, Long instructorId, Integer totalCapacity) {
+        this.courseCode = courseCode;
+        this.title = title;
+        this.description = description;
+        this.credits = credits;
+        this.instructorId = instructorId;
+        this.totalCapacity = totalCapacity;
+        this.availableSlots = totalCapacity;
     }
 
     public Long getCourseId() { return courseId; }
@@ -43,4 +59,10 @@ public class Courses {
 
     public Long getInstructorId() { return instructorId; }
     public void setInstructorId(Long instructorId) { this.instructorId = instructorId; }
+
+    public Integer getTotalCapacity() { return totalCapacity; }
+    public void setTotalCapacity(Integer totalCapacity) { this.totalCapacity = totalCapacity; }
+
+    public Integer getAvailableSlots() { return availableSlots; }
+    public void setAvailableSlots(Integer availableSlots) { this.availableSlots = availableSlots; }
 }

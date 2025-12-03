@@ -1,7 +1,10 @@
 package com.appdev.betaems.service;
 
-import com.appdev.betaems.entity.Enrollment;
 import java.util.List;
+
+import com.appdev.betaems.dto.EnrollmentRequestDTO;
+import com.appdev.betaems.dto.EnrollmentResponseDTO;
+import com.appdev.betaems.entity.Enrollment;
 
 public interface EnrollmentService {
     Enrollment createEnrollment(Enrollment enrollment);
@@ -9,4 +12,13 @@ public interface EnrollmentService {
     void deleteEnrollment(Long id);
     Enrollment getEnrollmentById(Long id);
     List<Enrollment> getAllEnrollments();
+    
+    /**
+     * Enrolls a student in a course with atomic slot decrement
+     * Prevents over-enrollment by checking and decrementing slots in a single transaction
+     * 
+     * @param request EnrollmentRequestDTO containing studentId and courseId
+     * @return EnrollmentResponseDTO with success/failure status and details
+     */
+    EnrollmentResponseDTO enrollStudent(EnrollmentRequestDTO request);
 }
