@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useApp } from '../state/AppContext.jsx'
 import Modal from '../components/Modal.jsx'
 import styles from '../styles/login.module.css'
 import registerStyles from '../styles/register.module.css'
@@ -56,26 +57,35 @@ export default function Register(){
 
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:8080/api/user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      let url = 'http://localhost:8080/api/user/register'
+      let payload = {
+        firstname: fullName.split(' ')[0],
+        lastname: fullName.split(' ').slice(1).join(' ') || '',
+        role: selectedRole,
+        email: email,
+        password: password
+      }
+      if(selectedRole === 'Student'){
+        url = 'http://localhost:8080/api/student/register'
+        // student expects additional fields; keep minimal
+        payload = {
           firstname: fullName.split(' ')[0],
           lastname: fullName.split(' ').slice(1).join(' ') || '',
-          role: selectedRole,
-          schoolId: schoolId,
           email: email,
-          password: password
-        })
+          password: password,
+          phone: '',
+          address: '',
+          dateOfBirth: '2000-01-01'
+        }
+      }
+
+      const response = await fetch(url, {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
       })
 
       if(response.ok){
         setSuccess('Registration successful! Redirecting to login...')
-        setTimeout(() => {
-          navigate('/login')
-        }, 2000)
+        setTimeout(() => { navigate('/login') }, 1500)
       } else {
         const errorData = await response.json()
         setError(errorData.message || 'Registration failed. Please try again.')
@@ -83,9 +93,7 @@ export default function Register(){
     } catch(err){
       setError('Network error. Please check your connection.')
       console.error(err)
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   const handleRoleSelect = (role) => {
