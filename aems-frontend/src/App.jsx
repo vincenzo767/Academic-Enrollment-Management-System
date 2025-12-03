@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Starter from './pages/Starter.jsx'
+import Dashboard from './pages/Dashboard.jsx'
 import PortalLayout from './layouts/PortalLayout.jsx'
 import BrowseCourses from './pages/BrowseCourses.jsx'
 import MyCourses from './pages/MyCourses.jsx'
@@ -32,7 +33,8 @@ export default function App() {
       <Route path="/register" element={<Register />} />
 
       <Route path="/portal" element={<PortalLayout />}>
-        <Route index element={<Navigate to="browse" replace />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="browse" element={<BrowseCourses />} />
         <Route path="my-courses" element={<MyCourses />} />
         <Route path="schedule" element={<Schedule />} />

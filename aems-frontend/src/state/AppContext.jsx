@@ -44,6 +44,20 @@ export function AppProvider({children}){
   // role can be 'student' | 'faculty' | 'admin' | null
   const [role, setRole] = useState(null)
   const perUnit = 500 // fee per unit (demo)
+  
+  // Student profile state
+  const [studentProfile, setStudentProfile] = useState({
+    fullName: 'John Michael Dien Doe',
+    schoolId: '20-2000-200',
+    email: 'john.doe@university.edu',
+    phone: '+1 (555) 123-4567',
+    yearLevel: '3rd Year',
+    semester: '3rd Semester',
+    program: 'Bachelor of Information Technology',
+    enrollmentStatus: 'Active',
+    profilePicture: null, // base64 or URL
+    joinDate: '2021-06-15'
+  })
 
   // load courses from backend and provide CRUD helpers
   useEffect(() => {
@@ -201,7 +215,7 @@ export function AppProvider({children}){
     return {units, perUnit, total: units * perUnit}
   },[courses,reservedIds,enrolledIds])
 
-  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole}
+  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole, studentProfile, setStudentProfile}
 
   // expose course CRUD helpers
   value.createCourse = createCourse

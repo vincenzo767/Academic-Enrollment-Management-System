@@ -18,6 +18,7 @@ export default function PortalLayout(){
           <UserAvatar name="John Michael Doe Doe" id="03-9000-000" />
         </div>
         <nav className={styles.nav}>
+          <NavLink to="/portal/dashboard" className={({isActive}) => isActive ? styles.active : ''}>Dashboard</NavLink>
           <NavLink to="/portal/browse" className={({isActive}) => isActive ? styles.active : ''}>Browse</NavLink>
           <NavLink to="/portal/my-courses" className={({isActive}) => isActive ? styles.active : ''}>My Courses</NavLink>
           <NavLink to="/portal/schedule" className={({isActive}) => isActive ? styles.active : ''}>Schedule</NavLink>
@@ -29,9 +30,10 @@ export default function PortalLayout(){
         <header className={styles.header}>
           <div>
             <h2>Student Portal</h2>
-            <p>Browse courses and manage your enrollment</p>
+            <p>View your dashboard and manage your enrollment</p>
           </div>
           <div className={styles.tabs}>
+            <NavLink to="/portal/dashboard" className={({isActive}) => isActive ? styles.tabActive : styles.tab}>Dashboard</NavLink>
             <NavLink to="/portal/browse" className={({isActive}) => isActive ? styles.tabActive : styles.tab}>Browse Courses</NavLink>
             <NavLink to="/portal/my-courses" className={({isActive}) => isActive ? styles.tabActive : styles.tab}>My Courses</NavLink>
             <NavLink to="/portal/schedule" className={({isActive}) => isActive ? styles.tabActive : styles.tab}>Schedule</NavLink>
