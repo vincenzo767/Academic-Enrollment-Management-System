@@ -1,21 +1,28 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useApp } from '../state/AppContext.jsx'
 import ForgotPasswordModal from '../components/ForgotPasswordModal.jsx'
 import ResetPasswordModal from '../components/ResetPasswordModal.jsx'
 import styles from '../styles/login.module.css'
 
 export default function FacultyLogin(){
-  const [employeeId, setEmployeeId] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showForgotModal, setShowForgotModal] = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
   const navigate = useNavigate()
 
-  function submit(e){
+  const { setRole } = useApp()
+
+  async function submit(e){
     e.preventDefault()
-    if(employeeId && password){
+    try{
+      const res = await fetch('http://localhost:8080/api/user/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) })
+      if(!res.ok){ return alert('Login failed') }
+      const u = await res.json()
+      setRole(u.role || 'faculty')
       navigate('/faculty')
-    }
+    } catch(e){ console.error(e); alert('Network error') }
   }
 
   return (
@@ -26,7 +33,7 @@ export default function FacultyLogin(){
       </header>
       <div className={styles.centerBox}>
         <form onSubmit={submit} className={styles.card}>
-          <input value={employeeId} onChange={e=>setEmployeeId(e.target.value)} placeholder="Enter employee ID" />
+          <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Enter email" />
           <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter Password" />
           <button type="submit">Faculty Login</button>
           <div className={styles.links}>

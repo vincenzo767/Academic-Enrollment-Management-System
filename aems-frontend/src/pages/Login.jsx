@@ -1,21 +1,36 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useApp } from '../state/AppContext.jsx'
 import ForgotPasswordModal from '../components/ForgotPasswordModal.jsx'
 import ResetPasswordModal from '../components/ResetPasswordModal.jsx'
 import styles from '../styles/login.module.css'
 
 export default function Login(){
-  const [schoolId, setSchoolId] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showForgotModal, setShowForgotModal] = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
   const navigate = useNavigate()
 
-  function submit(e){
+  const { setRole, setStudentProfile } = useApp()
+
+  async function submit(e){
     e.preventDefault()
-    // Mock authentication
-    if(schoolId && password){
+    try {
+      const res = await fetch('http://localhost:8080/api/student/login', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email, password })
+      })
+      if(!res.ok) {
+        // simple error handling
+        return alert('Login failed')
+      }
+      const data = await res.json()
+      setRole('student')
+      setStudentProfile(prev => ({ ...prev, fullName: data.firstname || '', email: data.email }))
       navigate('/portal')
+    } catch(e){
+      console.error(e)
+      alert('Network error')
     }
   }
 
@@ -27,7 +42,7 @@ export default function Login(){
       </header>
       <div className={styles.centerBox}>
         <form onSubmit={submit} className={styles.card}>
-          <input value={schoolId} onChange={e=>setSchoolId(e.target.value)} placeholder="Enter school ID" />
+          <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Enter email" />
           <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter Password" />
           <button type="submit">Login</button>
           <div className={styles.links}>
