@@ -10,6 +10,7 @@ import MyCourses from './pages/MyCourses.jsx'
 import Schedule from './pages/Schedule.jsx'
 import Payments from './pages/Payments.jsx'
 import FacultyLogin from './pages/FacultyLogin.jsx'
+import FacultyDashboard from './pages/FacultyDashboard.jsx'
 import FacultyPortalLayout from './layouts/FacultyPortalLayout.jsx'
 import FacultyCourses from './pages/FacultyCourses.jsx'
 import FacultyStudents from './pages/FacultyStudents.jsx'
@@ -43,7 +44,7 @@ export default function App() {
 
       <Route path="/faculty-login" element={<FacultyLogin />} />
       <Route path="/faculty" element={<FacultyPortalLayout />}>
-        <Route index element={<Navigate to="courses" replace />} />
+        <Route index element={<FacultyDashboard />} />
         <Route path="courses" element={<FacultyCourses />} />
         <Route path="students" element={<FacultyStudents />} />
         <Route path="reports" element={<FacultyReports />} />

@@ -18,6 +18,7 @@ export default function FacultyPortalLayout(){
           <UserAvatar name="Dr. Sarah Johnson" id="20-2000-200" />
         </div>
         <nav className={styles.nav}>
+          <NavLink to="/faculty" className={({isActive}) => isActive ? styles.active : ''}>Dashboard</NavLink>
           <NavLink to="/faculty/courses" className={({isActive}) => isActive ? styles.active : ''}>Courses</NavLink>
           <NavLink to="/faculty/students" className={({isActive}) => isActive ? styles.active : ''}>Students</NavLink>
           <NavLink to="/faculty/reports" className={({isActive}) => isActive ? styles.active : ''}>Reports</NavLink>
@@ -27,10 +28,11 @@ export default function FacultyPortalLayout(){
       <main className={styles.content}>
         <header className={styles.header}>
           <div>
-            <h2>Faculty Portal</h2>
-            <p>Browse courses and manage your enrollment</p>
+            <h2>LTO Admin Portal</h2>
+            <p>Manage student enrollments and courses</p>
           </div>
           <div className={styles.tabs}>
+            <NavLink to="/faculty" className={({isActive}) => isActive ? styles.tabActive : styles.tab}>Dashboard</NavLink>
             <NavLink to="/faculty/courses" className={({isActive}) => isActive ? styles.tabActive : styles.tab}>Courses</NavLink>
             <NavLink to="/faculty/students" className={({isActive}) => isActive ? styles.tabActive : styles.tab}>Students</NavLink>
             <NavLink to="/faculty/reports" className={({isActive}) => isActive ? styles.tabActive : styles.tab}>Reports</NavLink>
