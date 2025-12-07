@@ -26,7 +26,14 @@ export default function Login(){
       }
       const data = await res.json()
       setRole('student')
-      setStudentProfile(prev => ({ ...prev, fullName: data.firstname || '', email: data.email }))
+      setStudentProfile(prev => ({
+        ...prev,
+        studentId: data.studentId || data.id || prev.studentId,
+        fullName: `${data.firstname || ''} ${data.lastname || ''}`.trim() || prev.fullName,
+        email: data.email || prev.email,
+        phone: data.phone || prev.phone,
+        program: data.program || prev.program
+      }))
       navigate('/portal')
     } catch(e){
       console.error(e)

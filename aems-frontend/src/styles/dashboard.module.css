@@ -505,6 +505,54 @@
   justify-content: flex-end;
 }
 
+/* Change Program Modal (two-column layout) */
+.changeProgramOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40; /* keep below the Modal backdrop (z-index:50) so confirmation modal receives clicks */
+}
+.changeProgramModal {
+  background: #fff;
+  width: 80%;
+  max-width: 860px;
+  border-radius: 10px;
+  display: flex;
+  gap: 16px;
+  box-shadow: 0 20px 40px rgba(2,6,23,0.2);
+  overflow: hidden;
+}
+.changeProgramLeft {
+  width: 48%;
+  padding: 20px;
+  border-right: 1px solid #eef2f7;
+  background: #fbfdff;
+}
+.changeProgramRight {
+  width: 52%;
+  padding: 20px;
+}
+.changeProgramList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow: auto;
+  margin-top: 8px;
+}
+.changeProgramItem {
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+.changeProgramItem:hover { background: #f3f4f6; transform: translateY(-1px); }
+.changeProgramItemText { font-weight: 600; color: #111827; }
+.changeProgramActions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+
 .btn {
   padding: 10px 20px;
   border: none;

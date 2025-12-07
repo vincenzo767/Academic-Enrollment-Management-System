@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react'
 import { courses as initialCourses } from './mockData.js'
+import axiosInstance from '../api/axiosInstance.js'
 
 const AppContext = createContext(null)
 
@@ -46,18 +47,51 @@ export function AppProvider({children}){
   const perUnit = 500 // fee per unit (demo)
   
   // Student profile state
-  const [studentProfile, setStudentProfile] = useState({
-    fullName: 'John Michael Dien Doe',
-    schoolId: '20-2000-200',
-    email: 'john.doe@university.edu',
-    phone: '+1 (555) 123-4567',
-    yearLevel: '3rd Year',
-    semester: '3rd Semester',
-    program: 'Bachelor of Information Technology',
-    enrollmentStatus: 'Active',
-    profilePicture: null, // base64 or URL
-    joinDate: '2021-06-15'
-  })
+  const loadProfile = () => {
+    try {
+      const raw = localStorage.getItem('studentProfile')
+      if(raw) return JSON.parse(raw)
+    } catch(e) { /* ignore */ }
+    return {
+      fullName: 'John Michael Dien Doe',
+      schoolId: '20-2000-200',
+      email: 'john.doe@university.edu',
+      phone: '+1 (555) 123-4567',
+      yearLevel: '3rd Year',
+      semester: '3rd Semester',
+      program: '',
+      enrollmentStatus: 'Active',
+      profilePicture: null, // base64 or URL
+      joinDate: '2021-06-15'
+    }
+  }
+
+  const [studentProfile, setStudentProfile] = useState(loadProfile)
+
+  // persist studentProfile to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('studentProfile', JSON.stringify(studentProfile))
+    } catch (e) {
+      console.error('Could not persist studentProfile', e)
+    }
+  }, [studentProfile])
+
+  // persist studentProfile to backend when studentId exists
+  useEffect(() => {
+    const sid = studentProfile && (studentProfile.studentId || studentProfile.id)
+    if (!sid) return
+    const [first, ...rest] = (studentProfile.fullName || '').split(' ')
+    const lastname = rest.length ? rest.join(' ') : ''
+    const payload = {
+      firstname: first || null,
+      lastname: lastname || null,
+      email: studentProfile.email || null,
+      phone: studentProfile.phone || null,
+      program: studentProfile.program || null
+    }
+    axiosInstance.put(`/student/${sid}`, payload).catch(e => console.error('Could not persist profile to server', e))
+  }, [studentProfile])
 
   // load courses from backend and provide CRUD helpers
   useEffect(() => {

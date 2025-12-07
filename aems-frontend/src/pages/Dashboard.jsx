@@ -1,11 +1,16 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useApp } from '../state/AppContext.js'
+import { programList } from '../state/mockData.js'
 import EditProfile from '../components/EditProfile.jsx'
+import Modal from '../components/Modal.jsx'
 import styles from '../styles/dashboard.module.css'
 
 export default function Dashboard() {
-  const { courses, enrolledIds, notifications, role, studentProfile } = useApp()
+  const { courses, enrolledIds, notifications, role, studentProfile, setStudentProfile } = useApp()
   const [showEditProfile, setShowEditProfile] = useState(false)
+  const [showChangeProgram, setShowChangeProgram] = useState(false)
+  const [pendingProgram, setPendingProgram] = useState(null)
+  const [showConfirmChange, setShowConfirmChange] = useState(false)
 
   const enrolledCourses = courses.filter(c => enrolledIds.includes(c.id))
   const recentNotifications = notifications.slice(0, 5)
@@ -47,7 +52,10 @@ export default function Dashboard() {
         <div className={styles.profileRight}>
           <div className={styles.statusCard}>
             <span className={styles.statusLabel}>Program</span>
-            <div className={styles.statusValue}>{studentProfile.program}</div>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <div className={styles.statusValue}>{studentProfile.program || '—'}</div>
+                <button className={styles.changeProgramBtn} onClick={()=>{ setPendingProgram(null); setShowChangeProgram(true) }} style={{fontSize:12,padding:'4px 8px'}}>Change Program</button>
+              </div>
           </div>
           <div className={styles.statusCard}>
             <span className={styles.statusLabel}>Status</span>
@@ -159,6 +167,60 @@ export default function Dashboard() {
       {/* Edit Profile Modal */}
       {showEditProfile && (
         <EditProfile onClose={() => setShowEditProfile(false)} />
+      )}
+
+      {showChangeProgram && (
+        <div className={styles.changeProgramOverlay}>
+          <div className={styles.changeProgramModal} role="dialog" aria-modal="true">
+            <div className={styles.changeProgramLeft}>
+              <h3 style={{marginTop:0}}>Programs</h3>
+              <div className={styles.changeProgramList}>
+                {programList.map(p => (
+                  <div key={p.name} className={styles.changeProgramItem} onClick={()=>setPendingProgram(p)}>
+                    <div className={styles.changeProgramItemText}>{p.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className={styles.changeProgramRight}>
+              <h3 style={{marginTop:0}}>Selection</h3>
+              <div style={{minHeight:120,display:'flex',flexDirection:'column',justifyContent:'center',padding:12,border:'1px solid #eef2f7',borderRadius:6}}>
+                {pendingProgram ? (
+                  <div>
+                    <div style={{fontWeight:700,marginBottom:6}}>{pendingProgram.name}</div>
+                    <div style={{color:'#6b7280'}}>Prefixes: {pendingProgram.prefixes.join(', ')}</div>
+                  </div>
+                ) : (
+                  <div style={{color:'#6b7280'}}>Select a program from the left to preview and confirm.</div>
+                )}
+              </div>
+
+              <div className={styles.changeProgramActions}>
+                <button className="btn btn-ghost" onClick={()=>{ setShowChangeProgram(false); setPendingProgram(null) }}>Cancel</button>
+                <button className="btn" disabled={!pendingProgram} onClick={()=>{ if(!pendingProgram) return; setShowConfirmChange(true) }}>Confirm Change</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showConfirmChange && pendingProgram && (
+        <Modal onClose={()=>setShowConfirmChange(false)}>
+          <h3>Confirm Program Change</h3>
+          <p style={{marginTop:8}}>Are you sure you want to change your program to <strong>{pendingProgram.name}</strong>? This will replace your current program.</p>
+          <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+            <button className="btn btn-ghost" onClick={()=>setShowConfirmChange(false)}>Cancel</button>
+            <button className={"btn"} onClick={()=>{
+              console.log('[Dashboard] Confirming program change, pendingProgram=', pendingProgram)
+              setStudentProfile(prev => ({ ...prev, program: pendingProgram.name }))
+              console.log('[Dashboard] setStudentProfile called')
+              setShowConfirmChange(false)
+              setShowChangeProgram(false)
+              setPendingProgram(null)
+              console.log('[Dashboard] closed modals')
+            }}>Confirm Change</button>
+          </div>
+        </Modal>
       )}
     </div>
   )
