@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react'
 import { courses as initialCourses } from './mockData.js'
 import axiosInstance from '../api/axiosInstance.js'
+import { storageManager } from '../utils/StorageManager.js'
+import { notifyDataRestored, notifyDataCleared, notifyStorageUnavailable } from '../utils/storageNotifications.js'
 
 const AppContext = createContext(null)
 
@@ -44,6 +46,7 @@ export function AppProvider({children}){
   const [notifications, setNotifications] = useState([])
   // role can be 'student' | 'faculty' | 'admin' | null
   const [role, setRole] = useState(null)
+  const [storageAvailable, setStorageAvailable] = useState(storageManager.isAvailable)
   const perUnit = 500 // fee per unit (demo)
   
   // Student profile state
@@ -67,6 +70,87 @@ export function AppProvider({children}){
   }
 
   const [studentProfile, setStudentProfile] = useState(loadProfile)
+  const [dataRestored, setDataRestored] = useState(false) // flag to show restoration notification only once
+
+  // Initialize storage manager with current user ID when role is set
+  useEffect(() => {
+    if (role === 'student' && studentProfile && studentProfile.studentId) {
+      try {
+        storageManager.setCurrentUser(studentProfile.studentId)
+        
+        // Check if storage is available
+        if (!storageManager.isAvailable) {
+          setStorageAvailable(false)
+        }
+      } catch (e) {
+        console.error('Failed to initialize StorageManager:', e)
+      }
+    }
+  }, [role, studentProfile?.studentId])
+
+  // Restore user-specific data from storage on mount (only once per user)
+  useEffect(() => {
+    if (role === 'student' && storageManager.getCurrentUser() && !dataRestored) {
+      try {
+        // Restore reserved and enrolled courses
+        const storedReserved = storageManager.get('reservedIds', [])
+        const storedEnrolled = storageManager.get('enrolledIds', [])
+        const storedDepartment = storageManager.get('department', 'All')
+        
+        if (storedReserved.length > 0) {
+          setReservedIds(storedReserved)
+        }
+        if (storedEnrolled.length > 0) {
+          setEnrolledIds(storedEnrolled)
+        }
+        if (storedDepartment) {
+          setDepartment(storedDepartment)
+        }
+
+        // Show notification only if we actually restored something
+        if (storedReserved.length > 0 || storedEnrolled.length > 0) {
+          const context = { addNotification: (opts) => setNotifications(prev => [{ id: Date.now(), ...opts }, ...prev]) }
+          notifyDataRestored(context)
+        }
+
+        setDataRestored(true)
+      } catch (e) {
+        console.error('Failed to restore user data from storage:', e)
+        setDataRestored(true)
+      }
+    }
+  }, [role, dataRestored])
+
+  // Persist enrolled/reserved IDs to storage whenever they change
+  useEffect(() => {
+    if (role === 'student' && storageManager.getCurrentUser()) {
+      try {
+        storageManager.save('reservedIds', reservedIds)
+      } catch (e) {
+        console.error('Failed to persist reservedIds:', e)
+      }
+    }
+  }, [reservedIds, role])
+
+  useEffect(() => {
+    if (role === 'student' && storageManager.getCurrentUser()) {
+      try {
+        storageManager.save('enrolledIds', enrolledIds)
+      } catch (e) {
+        console.error('Failed to persist enrolledIds:', e)
+      }
+    }
+  }, [enrolledIds, role])
+
+  useEffect(() => {
+    if (role === 'student' && storageManager.getCurrentUser()) {
+      try {
+        storageManager.save('department', department)
+      } catch (e) {
+        console.error('Failed to persist department:', e)
+      }
+    }
+  }, [department, role])
 
   // persist studentProfile to localStorage whenever it changes
   useEffect(() => {
@@ -249,7 +333,39 @@ export function AppProvider({children}){
     return {units, perUnit, total: units * perUnit}
   },[courses,reservedIds,enrolledIds])
 
-  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole, studentProfile, setStudentProfile}
+  // Logout function: clears user-specific data from storage
+  const logout = () => {
+    try {
+      storageManager.clearUserData()
+      const context = { addNotification: (opts) => setNotifications(prev => [{ id: Date.now(), ...opts }, ...prev]) }
+      notifyDataCleared(context)
+    } catch (e) {
+      console.error('Error during logout:', e)
+    }
+    
+    // Reset user state
+    setRole(null)
+    setStudentProfile(loadProfile())
+    setReservedIds([])
+    setEnrolledIds([])
+    setDepartment('All')
+    setDataRestored(false)
+  }
+
+  // Get debug info about storage
+  const getStorageDebugInfo = () => {
+    if (!storageManager.isAvailable) {
+      return 'Storage is not available'
+    }
+    return {
+      isAvailable: storageManager.isAvailable,
+      currentUserId: storageManager.getCurrentUser(),
+      usageSize: storageManager.getUsageSize(),
+      keys: storageManager.getAllKeys()
+    }
+  }
+
+  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole, studentProfile, setStudentProfile, logout, storageAvailable, getStorageDebugInfo}
 
   // expose course CRUD helpers
   value.createCourse = createCourse
