@@ -38,6 +38,9 @@ public class Student {
 
     @Column(nullable = false)
     private String address;
+    
+    @Column(nullable = true)
+    private String program;
 
     // Getters
     public Long getStudentId() {
@@ -70,6 +73,10 @@ public class Student {
 
     public String getAddress() {
         return address;
+    }
+
+    public String getProgram() {
+        return program;
     }
 
 
@@ -105,6 +112,10 @@ public class Student {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public void setProgram(String program) {
+        this.program = program;
     }
 
 

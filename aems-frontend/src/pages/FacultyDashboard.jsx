@@ -74,48 +74,113 @@ export default function FacultyDashboard() {
 
   // Fetch enrollment data by semester
   useEffect(() => {
+    let intervalId = null
+
     const fetchEnrollmentData = async () => {
       try {
-        // Fetch enrollments by semester
-        const res = await axiosInstance.get(`/enrollments/semester/${selectedSemester}`)
-        const enrollments = res.data || []
+        // Fetch all students and enrollments (semester filter is for demo)
+        const [sres, eres] = await Promise.all([
+          fetch('/api/student'),
+          fetch('/api/enrollments')
+        ])
+
+        if (!sres.ok || !eres.ok) {
+          console.error('Failed to fetch:', sres.status, eres.status)
+          return
+        }
+
+        const students = await sres.json() || []
+        const enrollments = await eres.json() || []
 
         // Calculate stats
-        const pending = enrollments.filter(e => e.status === 'Pending').length
-        const approved = enrollments.filter(e => e.status === 'Approved').length
-        const unique = new Set(enrollments.map(e => e.studentId)).size
-        const attention = enrollments.filter(e => e.status === 'Requires Attention').length
+        const enrolled = enrollments.filter(e => e.status && e.status.toLowerCase() === 'enrolled').length
+        const pending = enrollments.filter(e => e.status && e.status.toLowerCase() === 'pending').length
+        const uniqueStudents = new Set(students.map(s => s.studentId)).size
 
         setEnrollmentStats({
           pendingEnrollments: pending,
-          approvedToday: approved,
-          totalStudents: unique,
-          requiresAttention: attention
+          approvedToday: enrolled,
+          totalStudents: uniqueStudents,
+          requiresAttention: 0 // would require status field
         })
 
-        // Create mock student records from enrollments
-        const mockStudents = [
-          { studentId: '20-2000-200', name: 'John Michael Doe', program: 'BS Information Technology', course: 'IT101 - Introduction to Computing', date: '2024-12-06', status: 'Pending' },
-          { studentId: '20-2000-201', name: 'Maria Santos', program: 'BS Computer Science', course: 'CS201 - Data Structures', date: '2024-12-06', status: 'Pending' },
-          { studentId: '20-2000-202', name: 'Vince Batawang', program: 'BS Information Technology', course: 'IT102 - Programming Fundamentals', date: '2024-12-05', status: 'Pending' },
-          { studentId: '20-2000-203', name: 'Anna Cruz', program: 'BS Information Systems', course: 'IS101 - Systems Analysis', date: '2024-12-05', status: 'Pending' }
-        ]
-        setStudentRecords(mockStudents)
+        // Fetch courses so we can derive program from course codes if student.program is missing
+        const cres = await fetch('/api/courses')
+        const courses = cres.ok ? (await cres.json()) : []
 
-        // Create mock recent activity
-        const mockActivity = [
-          { id: 1, type: 'success', text: 'Approved enrollment for John Doe - IT101', time: '2 minutes ago' },
-          { id: 2, type: 'info', text: 'New enrollment request from Maria Santos', time: '15 minutes ago' },
-          { id: 3, type: 'error', text: 'Rejected duplicate enrollment for CS201', time: '1 hour ago' },
-          { id: 4, type: 'success', text: 'Bulk approved 12 enrollments for IT102', time: '3 hours ago' }
-        ]
-        setRecentActivity(mockActivity)
+        // Map students to enrollment records
+        const studentEnrollmentMap = new Map()
+        enrollments.forEach(e => {
+          if (!studentEnrollmentMap.has(e.studentId)) {
+            studentEnrollmentMap.set(e.studentId, [])
+          }
+          studentEnrollmentMap.get(e.studentId).push(e)
+        })
+
+        // Create student records from backend data
+        const records = students.slice(0, 10).map(s => {
+          const enrs = studentEnrollmentMap.get(s.studentId) || []
+          const latestEnrollment = enrs.length > 0 ? enrs[0] : null
+          // Prefer program coming from backend student record if available
+          let program = s.program || s.programName || s.degree || null
+          if(!program){
+            // derive program heuristically from student's enrollments and course codes
+            if(enrs.length > 0 && Array.isArray(courses)){
+              const firstCourseId = enrs[0].courseId
+              const course = courses.find(c => (c.courseId === firstCourseId || c.id === firstCourseId || String(c.courseId) === String(firstCourseId)))
+              const code = course ? (course.courseCode || course.code || '') : ''
+              if(code.startsWith('CS')) program = 'BS in Computer Science'
+              else if(code.startsWith('IT')) program = 'BS Information Technology'
+              else if(code.startsWith('MATH')) program = 'BS in Mathematics'
+              else if(code.startsWith('ENG')) program = 'BS in English'
+            }
+          }
+          if(!program) program = 'Unknown'
+          return {
+            studentId: `${s.studentId}`,
+            name: `${s.firstname || ''} ${s.lastname || ''}`.trim(),
+            program: program,
+            course: latestEnrollment ? `Course ${latestEnrollment.courseId}` : 'No enrollment',
+            date: latestEnrollment ? latestEnrollment.enrollmentDate : new Date().toISOString().split('T')[0],
+            status: latestEnrollment ? (latestEnrollment.status || 'Pending') : 'No enrollment'
+          }
+        })
+
+        setStudentRecords(records)
+
+        // Create activity feed from recent enrollments
+        const recentEnrollments = enrollments.slice(0, 6).map((e, idx) => {
+          const student = students.find(s => s.studentId === e.studentId)
+          const studentName = student ? `${student.firstname} ${student.lastname}` : `Student ${e.studentId}`
+          const action = e.status || 'unknown'
+          return {
+            id: e.enrollmentId || idx,
+            type: action === 'enrolled' ? 'success' : 'info',
+            text: `${action === 'enrolled' ? 'Approved' : 'Requested'} enrollment for ${studentName}`,
+            time: e.enrollmentDate || 'just now'
+          }
+        })
+
+        setRecentActivity(recentEnrollments)
       } catch (e) {
         console.error('Failed to fetch enrollment data:', e)
       }
     }
 
+    // initial load
     fetchEnrollmentData()
+
+    // poll every 5 seconds to pick up live changes (e.g., student profile updates)
+    intervalId = setInterval(fetchEnrollmentData, 5000)
+
+    // also refresh when window/tab gains focus
+    const onFocus = () => fetchEnrollmentData()
+    window.addEventListener('focus', onFocus)
+
+    return () => {
+      if (intervalId) clearInterval(intervalId)
+      window.removeEventListener('focus', onFocus)
+    }
   }, [selectedSemester])
 
   const handleProfileUpdate = async () => {

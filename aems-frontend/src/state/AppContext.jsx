@@ -47,6 +47,7 @@ export function AppProvider({children}){
   // role can be 'student' | 'faculty' | 'admin' | null
   const [role, setRole] = useState(null)
   const [storageAvailable, setStorageAvailable] = useState(storageManager.isAvailable)
+  const [auditLog, setAuditLog] = useState([])
   const perUnit = 500 // fee per unit (demo)
   
   // Student profile state
@@ -236,6 +237,28 @@ export function AppProvider({children}){
     } catch(e){ console.error(e); throw e }
   }
 
+  // Log an audit event (client-side action: enroll, drop, reserve)
+  const logAuditEvent = (action, courseId, courseCode, courseTitle, studentId) => {
+    const event = {
+      id: Date.now() + Math.floor(Math.random()*1000),
+      timestamp: new Date().toISOString(),
+      action,
+      courseId,
+      courseCode,
+      courseTitle,
+      studentId
+    }
+    setAuditLog(prev => [event, ...prev])
+    try {
+      if (storageManager.getCurrentUser()) {
+        const stored = storageManager.get('auditLog', [])
+        storageManager.save('auditLog', [event, ...stored].slice(0, 100))
+      }
+    } catch (e) {
+      console.error('Could not persist audit log', e)
+    }
+  }
+
   // helper: add structured notification; accepts optional `role` to scope recipients
   const addNotification = ({text, type = 'info', courseId = null, targetRole = null}) => {
     const n = { id: Date.now() + Math.floor(Math.random()*1000), text, type, courseId, timestamp: new Date().toISOString(), read: false, role: targetRole || role || 'all' }
@@ -273,8 +296,13 @@ export function AppProvider({children}){
     setReservedIds(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev,id])
     const course = courses.find(c=>c.id===id)
     if(!course) return
-    if(isReserved) addNotification({text:`Reservation cancelled: ${course.code} ${course.title}`, type:'cancel', courseId:id})
-    else addNotification({text:`Reserved: ${course.code} ${course.title}`, type:'reserve', courseId:id})
+    if(isReserved) {
+      addNotification({text:`Reservation cancelled: ${course.code} ${course.title}`, type:'cancel', courseId:id})
+      logAuditEvent('cancel_reserve', id, course.code, course.title, studentProfile?.studentId)
+    } else {
+      addNotification({text:`Reserved: ${course.code} ${course.title}`, type:'reserve', courseId:id})
+      logAuditEvent('reserve', id, course.code, course.title, studentProfile?.studentId)
+    }
   }
 
   const enrollCourse = (id) => {
@@ -282,6 +310,7 @@ export function AppProvider({children}){
       setEnrolledIds(prev=>[...prev,id])
       const course = courses.find(c=>c.id===id)
       addNotification({text: `Enrolled in: ${course ? course.code + ' ' + course.title : id}`, type:'enroll', courseId:id})
+      logAuditEvent('enroll', id, course?.code, course?.title, studentProfile?.studentId)
     }
   }
 
@@ -290,6 +319,7 @@ export function AppProvider({children}){
       setEnrolledIds(prev => prev.filter(x=> x !== id))
       const course = courses.find(c=>c.id===id)
       addNotification({text: `Dropped: ${course ? course.code + ' ' + course.title : id}`, type:'drop', courseId:id})
+      logAuditEvent('drop', id, course?.code, course?.title, studentProfile?.studentId)
     }
   }
 
@@ -365,7 +395,7 @@ export function AppProvider({children}){
     }
   }
 
-  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole, studentProfile, setStudentProfile, logout, storageAvailable, getStorageDebugInfo}
+  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole, studentProfile, setStudentProfile, logout, storageAvailable, getStorageDebugInfo, auditLog, logAuditEvent}
 
   // expose course CRUD helpers
   value.createCourse = createCourse

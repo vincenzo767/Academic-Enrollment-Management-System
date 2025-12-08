@@ -37,6 +37,12 @@ public class StudentService {
             student.setPhone(studentDetails.getPhone());
             student.setDateOfBirth(studentDetails.getDateOfBirth());
             student.setAddress(studentDetails.getAddress());
+            // update program if provided
+            try {
+                student.setProgram(studentDetails.getProgram());
+            } catch (Exception ex) {
+                // ignore if field not present
+            }
             return studentRepository.save(student);
         }
         return null;
