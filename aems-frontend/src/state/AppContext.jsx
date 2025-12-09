@@ -5,6 +5,7 @@ import { storageManager } from '../utils/StorageManager.js'
 import { notifyDataRestored, notifyDataCleared, notifyStorageUnavailable } from '../utils/storageNotifications.js'
 
 const AppContext = createContext(null)
+const FACULTY_SYNC_KEY = 'aems:facultySync'
 
 const DAY_MAP = { M: 'Monday', T: 'Tuesday', W: 'Wednesday', Th: 'Thursday', F: 'Friday', Sat: 'Saturday', Sun: 'Sunday' }
 
@@ -177,6 +178,33 @@ export function AppProvider({children}){
     }
   }, [studentProfile])
 
+  // helper: push a snapshot of the current student state to a shared localStorage bucket so the faculty dashboard can reflect changes immediately
+  const syncFacultyDashboard = (overrides = {}) => {
+    if (role !== 'student') return
+    const sid = studentProfile?.studentId || studentProfile?.schoolId
+    if (!sid) return
+
+    const payload = {
+      studentId: String(sid),
+      name: studentProfile?.fullName || '',
+      program: studentProfile?.program || '—',
+      courseCount: overrides.courseCount !== undefined ? overrides.courseCount : enrolledIds.length,
+      status: overrides.status || (registrationSubmitted ? 'Registered' : 'Pending'),
+      updatedAt: Date.now()
+    }
+
+    try {
+      const raw = localStorage.getItem(FACULTY_SYNC_KEY)
+      const parsed = raw ? JSON.parse(raw) : {}
+      parsed[payload.studentId] = payload
+      localStorage.setItem(FACULTY_SYNC_KEY, JSON.stringify(parsed))
+      // notify same-tab listeners without waiting for storage events
+      window.dispatchEvent(new CustomEvent('aems:facultySync', { detail: payload }))
+    } catch (e) {
+      console.error('Failed to sync faculty dashboard state', e)
+    }
+  }
+
   // persist studentProfile to backend when studentId exists
   useEffect(() => {
     const sid = studentProfile && (studentProfile.studentId || studentProfile.id)
@@ -199,6 +227,12 @@ export function AppProvider({children}){
         console.error(`[AppContext] Failed to persist profile to server for student ${sid}:`, e.message, e.response?.data || e)
       })
   }, [studentProfile])
+
+  // mirror student enrollment snapshot to faculty dashboard whenever enrollment selection, submission, or identity changes
+  useEffect(() => {
+    syncFacultyDashboard()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enrolledIds, registrationSubmitted, studentProfile?.studentId, studentProfile?.schoolId, studentProfile?.fullName, studentProfile?.program])
 
   // load courses from backend and provide CRUD helpers
   useEffect(() => {
@@ -350,6 +384,7 @@ export function AppProvider({children}){
     setRegistrationSubmitted(true)
     addNotification({text: 'Registration submitted successfully! You can no longer change your program, drop courses, or enroll in new courses.', type:'success'})
     logAuditEvent('submit_registration', null, null, null, studentProfile?.studentId)
+    syncFacultyDashboard({ status: 'Registered' })
   }
 
   const markAsRead = (nid) => {

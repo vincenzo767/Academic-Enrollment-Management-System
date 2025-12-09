@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useApp } from '../state/AppContext.jsx'
 import Modal from '../components/Modal.jsx'
 import styles from '../styles/dashboard.module.css'
@@ -16,6 +16,7 @@ export default function FacultyDashboard() {
   })
   const [studentRecords, setStudentRecords] = useState([])
   const [recentActivity, setRecentActivity] = useState([])
+  const [localSync, setLocalSync] = useState({})
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [editFormData, setEditFormData] = useState({
     firstName: '',
@@ -27,7 +28,41 @@ export default function FacultyDashboard() {
     officeHours: ''
   })
 
+  const localSyncRef = useRef({})
+
+  const FACULTY_SYNC_KEY = 'aems:facultySync'
+
   const semesters = ['1st Semester', '2nd Semester', 'Summer']
+
+  const mergeWithLocalOverrides = (records, overrides) => {
+    if (!overrides || typeof overrides !== 'object') return records
+    const map = new Map(records.map(r => [String(r.studentId), r]))
+    Object.values(overrides).forEach((o) => {
+      if (!o || !o.studentId) return
+      const sid = String(o.studentId)
+      const existing = map.get(sid)
+      const base = existing || { studentId: sid, name: o.name || `Student ${sid}`, program: o.program || '—', date: new Date().toISOString().split('T')[0] }
+      map.set(sid, {
+        ...base,
+        name: o.name || base.name,
+        program: o.program || base.program,
+        courseCount: o.courseCount !== undefined ? o.courseCount : (base.courseCount || 0),
+        status: o.status || base.status || 'Pending'
+      })
+    })
+    return Array.from(map.values())
+  }
+
+  const computeStats = (records) => {
+    const pending = records.filter(r => r.status === 'Pending').length
+    const registered = records.filter(r => r.status === 'Registered').length
+    return {
+      pendingEnrollments: pending,
+      approvedToday: registered,
+      totalStudents: records.length,
+      requiresAttention: pending
+    }
+  }
 
   // Load faculty profile from localStorage
   useEffect(() => {
@@ -76,6 +111,26 @@ export default function FacultyDashboard() {
   useEffect(() => {
     let intervalId = null
 
+    const loadLocalSync = () => {
+      try {
+        const raw = localStorage.getItem(FACULTY_SYNC_KEY)
+        const parsed = raw ? JSON.parse(raw) : {}
+        localSyncRef.current = parsed
+        setLocalSync(parsed)
+        return parsed
+      } catch (e) {
+        console.error('Failed to read faculty sync cache', e)
+        return {}
+      }
+    }
+
+    const applyLocalOverrides = (records, overrides) => {
+      const merged = mergeWithLocalOverrides(records, overrides)
+      setStudentRecords(merged)
+      setEnrollmentStats(computeStats(merged))
+      return merged
+    }
+
     const fetchEnrollmentData = async () => {
       try {
         // Fetch all students and enrollments (semester filter is for demo)
@@ -93,16 +148,7 @@ export default function FacultyDashboard() {
         const enrollments = await eres.json() || []
 
         // Calculate stats
-        const enrolled = enrollments.filter(e => e.status && e.status.toLowerCase() === 'enrolled').length
-        const pending = enrollments.filter(e => e.status && e.status.toLowerCase() === 'pending').length
         const uniqueStudents = new Set(students.map(s => s.studentId)).size
-
-        setEnrollmentStats({
-          pendingEnrollments: pending,
-          approvedToday: enrolled,
-          totalStudents: uniqueStudents,
-          requiresAttention: 0 // would require status field
-        })
 
         // Fetch courses so we can derive program from course codes if student.program is missing
         const cres = await fetch('/api/courses')
@@ -120,6 +166,13 @@ export default function FacultyDashboard() {
         // Create student records from backend data
         const records = students.slice(0, 10).map(s => {
           const enrs = studentEnrollmentMap.get(s.studentId) || []
+          const normalized = enrs.map(e => (e.status || '').toLowerCase())
+          const courseCount = enrs.filter(e => {
+            const status = (e.status || '').toLowerCase()
+            return status !== 'dropped' && status !== 'cancelled'
+          }).length
+          const hasRegistered = normalized.some(st => st === 'registered' || st === 'enrolled' || st === 'approved' || st === 'submitted')
+          const status = hasRegistered ? 'Registered' : 'Pending'
           const latestEnrollment = enrs.length > 0 ? enrs[0] : null
           // Prefer program coming from backend student record if available
           let program = s.program || s.programName || s.degree || null
@@ -140,13 +193,19 @@ export default function FacultyDashboard() {
             studentId: `${s.studentId}`,
             name: `${s.firstname || ''} ${s.lastname || ''}`.trim(),
             program: program,
-            course: latestEnrollment ? `Course ${latestEnrollment.courseId}` : 'No enrollment',
+            courseCount,
             date: latestEnrollment ? latestEnrollment.enrollmentDate : new Date().toISOString().split('T')[0],
-            status: latestEnrollment ? (latestEnrollment.status || 'Pending') : 'No enrollment'
+            status
           }
         })
 
-        setStudentRecords(records)
+        // merge with any local overrides coming from the student portal for instant updates
+        const overrides = localSyncRef.current || {}
+        applyLocalOverrides(records, overrides)
+
+        // Update stats based on merged records
+        const mergedStats = computeStats(mergeWithLocalOverrides(records, overrides))
+        setEnrollmentStats({ ...mergedStats, totalStudents: uniqueStudents || mergedStats.totalStudents })
 
         // Create activity feed from recent enrollments
         const recentEnrollments = enrollments.slice(0, 6).map((e, idx) => {
@@ -167,7 +226,8 @@ export default function FacultyDashboard() {
       }
     }
 
-    // initial load
+    // initial load (includes any local overrides)
+    loadLocalSync()
     fetchEnrollmentData()
 
     // poll every 5 seconds to pick up live changes (e.g., student profile updates)
@@ -177,9 +237,43 @@ export default function FacultyDashboard() {
     const onFocus = () => fetchEnrollmentData()
     window.addEventListener('focus', onFocus)
 
+    // listen for cross-tab updates when students submit or enroll
+    const onStorage = (evt) => {
+      if (evt.key !== FACULTY_SYNC_KEY) return
+      try {
+        const parsed = evt.newValue ? JSON.parse(evt.newValue) : {}
+        localSyncRef.current = parsed
+        setLocalSync(parsed)
+        setStudentRecords(prev => {
+          const merged = mergeWithLocalOverrides(prev, parsed)
+          setEnrollmentStats(computeStats(merged))
+          return merged
+        })
+      } catch (e) {
+        console.error('Failed to apply storage sync update', e)
+      }
+    }
+
+    const onLocalSyncEvent = (evt) => {
+      if (!evt.detail || !evt.detail.studentId) return
+      const current = { ...localSyncRef.current, [evt.detail.studentId]: evt.detail }
+      localSyncRef.current = current
+      setLocalSync(current)
+      setStudentRecords(prev => {
+        const merged = mergeWithLocalOverrides(prev, current)
+        setEnrollmentStats(computeStats(merged))
+        return merged
+      })
+    }
+
+    window.addEventListener('storage', onStorage)
+    window.addEventListener('aems:facultySync', onLocalSyncEvent)
+
     return () => {
       if (intervalId) clearInterval(intervalId)
       window.removeEventListener('focus', onFocus)
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener('aems:facultySync', onLocalSyncEvent)
     }
   }, [selectedSemester])
 
@@ -333,7 +427,7 @@ export default function FacultyDashboard() {
               <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
                 <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Student</th>
                 <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Program</th>
-                <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Course</th>
+                <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Enrolled Courses</th>
                 <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Date</th>
                 <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Status</th>
                 <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Actions</th>
@@ -347,10 +441,10 @@ export default function FacultyDashboard() {
                     <div style={{ fontSize: '12px', color: '#6b7280' }}>{record.studentId}</div>
                   </td>
                   <td style={{ padding: '12px' }}>{record.program}</td>
-                  <td style={{ padding: '12px' }}>{record.course}</td>
+                  <td style={{ padding: '12px', fontWeight: '700' }}>{record.courseCount ?? 0}</td>
                   <td style={{ padding: '12px' }}>{record.date}</td>
                   <td style={{ padding: '12px' }}>
-                    <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
+                    <span style={{ background: record.status === 'Registered' ? '#dcfce7' : '#fef3c7', color: record.status === 'Registered' ? '#166534' : '#92400e', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
                       {record.status}
                     </span>
                   </td>
