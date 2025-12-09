@@ -6,11 +6,12 @@ import Modal from '../components/Modal.jsx'
 import styles from '../styles/dashboard.module.css'
 
 export default function Dashboard() {
-  const { courses, enrolledIds, notifications, role, studentProfile, setStudentProfile } = useApp()
+  const { courses, enrolledIds, notifications, role, studentProfile, setStudentProfile, registrationSubmitted, submitRegistration } = useApp()
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showChangeProgram, setShowChangeProgram] = useState(false)
   const [pendingProgram, setPendingProgram] = useState(null)
   const [showConfirmChange, setShowConfirmChange] = useState(false)
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
 
   const enrolledCourses = courses.filter(c => enrolledIds.includes(c.id))
   const recentNotifications = notifications.slice(0, 5)
@@ -54,7 +55,15 @@ export default function Dashboard() {
             <span className={styles.statusLabel}>Program</span>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <div className={styles.statusValue}>{studentProfile.program || '—'}</div>
-                <button className={styles.changeProgramBtn} onClick={()=>{ setPendingProgram(null); setShowChangeProgram(true) }} style={{fontSize:12,padding:'4px 8px'}}>Change Program</button>
+                <button 
+                  className={styles.changeProgramBtn} 
+                  onClick={()=>{ setPendingProgram(null); setShowChangeProgram(true) }} 
+                  style={{fontSize:12,padding:'4px 8px'}}
+                  disabled={registrationSubmitted}
+                  title={registrationSubmitted ? "Cannot change program after registration submission" : ""}
+                >
+                  Change Program
+                </button>
               </div>
           </div>
           <div className={styles.statusCard}>
@@ -108,29 +117,56 @@ export default function Dashboard() {
             <p>No courses enrolled yet. Browse and enroll in courses to get started!</p>
           </div>
         ) : (
-          <div className={styles.courseGrid}>
-            {enrolledCourses.map(course => (
-              <div key={course.id} className={styles.enrolledCourseCard}>
-                <div className={styles.courseCode}>{course.code}</div>
-                <h3 className={styles.courseTitle}>{course.title}</h3>
-                <p className={styles.courseSubtitle}>{course.subtitle}</p>
-                
-                {course.schedule && (
-                  <div className={styles.courseSchedule}>
-                    <span>🕐 {course.schedule}</span>
-                  </div>
-                )}
-                
-                <span className={styles.courseUnits}>{course.units} Units</span>
-                
-                {course.instructor && (
-                  <div className={styles.courseInstructor}>
-                    👨‍🏫 Instructor: {course.instructor}
-                  </div>
-                )}
+          <>
+            <div className={styles.courseGrid}>
+              {enrolledCourses.map(course => (
+                <div key={course.id} className={styles.enrolledCourseCard}>
+                  <div className={styles.courseCode}>{course.code}</div>
+                  <h3 className={styles.courseTitle}>{course.title}</h3>
+                  <p className={styles.courseSubtitle}>{course.subtitle}</p>
+                  
+                  {course.schedule && (
+                    <div className={styles.courseSchedule}>
+                      <span>🕐 {course.schedule}</span>
+                    </div>
+                  )}
+                  
+                  <span className={styles.courseUnits}>{course.units} Units</span>
+                  
+                  {course.instructor && (
+                    <div className={styles.courseInstructor}>
+                      👨‍🏫 Instructor: {course.instructor}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            {/* Submit Registration Button - only visible if courses enrolled and not yet submitted */}
+            {!registrationSubmitted && enrolledCourses.length > 0 && (
+              <div style={{marginTop: 24}}>
+                <div style={{marginBottom: 16, padding: '12px 16px', backgroundColor: '#d1fae5', border: '1px solid #10b981', borderRadius: '6px', color: '#047857', fontWeight: '600'}}>
+                  ⓘ Please review your selected courses carefully. Once submitted, you cannot change your program, drop courses, or enroll in new courses.
+                </div>
+                <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+                  <button 
+                    className="btn"
+                    style={{backgroundColor: '#10b981', color: 'white', padding: '10px 24px', fontSize: '14px', fontWeight: '600'}}
+                    onClick={() => setShowSubmitConfirm(true)}
+                  >
+                    ✓ Submit Registration
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* Registration Submitted Badge */}
+            {registrationSubmitted && (
+              <div style={{marginTop: 24, padding: '12px 16px', backgroundColor: '#ecfdf5', border: '1px solid #10b981', borderRadius: '6px', color: '#047857', fontWeight: '600', textAlign: 'center'}}>
+                ✓ Registration Submitted - Your course selection is locked
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -219,6 +255,37 @@ export default function Dashboard() {
               setPendingProgram(null)
               console.log('[Dashboard] closed modals')
             }}>Confirm Change</button>
+          </div>
+        </Modal>
+      )}
+
+      {showSubmitConfirm && (
+        <Modal onClose={()=>setShowSubmitConfirm(false)}>
+          <h3>Submit Your Registration</h3>
+          <p style={{marginTop:12, marginBottom:12}}>
+            You are about to submit your course registration. Once submitted:
+          </p>
+          <ul style={{marginBottom:12, paddingLeft:20, lineHeight:1.8}}>
+            <li>✗ You <strong>cannot change your program</strong></li>
+            <li>✗ You <strong>cannot drop courses</strong></li>
+            <li>✗ You <strong>cannot enroll in new courses</strong></li>
+            <li>✓ Your course selection will be <strong>locked and finalized</strong></li>
+          </ul>
+          <p style={{marginBottom:16, color:'#666', fontSize:'14px'}}>
+            This action is permanent. Please review your selections carefully before confirming.
+          </p>
+          <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:20}}>
+            <button className="btn btn-ghost" onClick={()=>setShowSubmitConfirm(false)}>Cancel</button>
+            <button 
+              className="btn" 
+              style={{backgroundColor: '#10b981'}}
+              onClick={()=>{
+                submitRegistration()
+                setShowSubmitConfirm(false)
+              }}
+            >
+              Confirm Submission
+            </button>
           </div>
         </Modal>
       )}

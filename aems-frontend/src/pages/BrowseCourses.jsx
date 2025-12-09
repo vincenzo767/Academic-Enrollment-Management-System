@@ -13,7 +13,7 @@ export default function BrowseCourses(){
   const [programCourses, setProgramCourses] = useState(null)
   const [lockedModal, setLockedModal] = useState(null) // {type:'needProgram'|'locked', message}
 
-  const { filteredCourses, departments, department, setDepartment, toggleReserve, enrollCourse, courses, studentProfile, setStudentProfile } = useApp()
+  const { filteredCourses, departments, department, setDepartment, toggleReserve, enrollCourse, courses, studentProfile, setStudentProfile, registrationSubmitted } = useApp()
 
   // initialize selection from persisted profile
   useEffect(()=>{
@@ -29,6 +29,12 @@ export default function BrowseCourses(){
   },[studentProfile, courses])
 
   function enroll(course){
+    // validation: check if registration is submitted
+    if(registrationSubmitted){
+      setLockedModal({type:'registrationLocked', message:'Your registration has been submitted. You can no longer enroll in courses.'})
+      return
+    }
+
     // validation: student must choose a program before enrolling
     if(!studentProfile || !studentProfile.program){
       setLockedModal({type:'needProgram', message:'You must choose a program first before enrolling. Go to Browse Courses to select your program.'})
@@ -61,11 +67,16 @@ export default function BrowseCourses(){
 
   return (
     <div>
+      {registrationSubmitted && (
+        <div style={{padding: '12px 16px', marginBottom: '16px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '6px', color: '#991b1b', fontWeight: '600', textAlign: 'center'}}>
+          🔒 Your registration has been submitted. Course enrollment is locked.
+        </div>
+      )}
       <div className={styles.searchRow} style={{display:'flex', gap:12, alignItems:'center'}}>
-        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search by course, name, code or department..." />
+        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search by course, name, code or department..." disabled={registrationSubmitted} />
         <div style={{display:'flex',alignItems:'center',gap:8}}>
           <label style={{fontWeight:600}}>Choose Program:</label>
-          <select disabled={!!(studentProfile && studentProfile.program)} value={selectedProgram ? selectedProgram.name : (studentProfile && studentProfile.program ? studentProfile.program : 'none')} onChange={e=>{
+          <select disabled={!!(studentProfile && studentProfile.program) || registrationSubmitted} value={selectedProgram ? selectedProgram.name : (studentProfile && studentProfile.program ? studentProfile.program : 'none')} onChange={e=>{
             const val = e.target.value
             if(val === 'none'){
               setConfirmProgram(null); setSelectedProgram(null); setProgramCourses(null)
@@ -98,7 +109,11 @@ export default function BrowseCourses(){
 
       {lockedModal && (
         <Modal onClose={()=>setLockedModal(null)}>
-          <h3>{lockedModal.type === 'needProgram' ? 'Choose a Program First' : 'Program Locked'}</h3>
+          <h3>
+            {lockedModal.type === 'needProgram' ? 'Choose a Program First' : 
+             lockedModal.type === 'registrationLocked' ? 'Registration Locked' : 
+             'Program Locked'}
+          </h3>
           <p style={{marginTop:8}}>{lockedModal.message}</p>
           <div style={{marginTop:16, textAlign:'center'}}>
             <button className="btn" onClick={()=>setLockedModal(null)}>OK</button>

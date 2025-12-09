@@ -72,6 +72,7 @@ export function AppProvider({children}){
 
   const [studentProfile, setStudentProfile] = useState(loadProfile)
   const [dataRestored, setDataRestored] = useState(false) // flag to show restoration notification only once
+  const [registrationSubmitted, setRegistrationSubmitted] = useState(false) // flag for registration submission status
 
   // Initialize storage manager with current user ID when role is set
   useEffect(() => {
@@ -97,6 +98,7 @@ export function AppProvider({children}){
         const storedReserved = storageManager.get('reservedIds', [])
         const storedEnrolled = storageManager.get('enrolledIds', [])
         const storedDepartment = storageManager.get('department', 'All')
+        const storedRegistrationSubmitted = storageManager.get('registrationSubmitted', false)
         
         if (storedReserved.length > 0) {
           setReservedIds(storedReserved)
@@ -106,6 +108,9 @@ export function AppProvider({children}){
         }
         if (storedDepartment) {
           setDepartment(storedDepartment)
+        }
+        if (storedRegistrationSubmitted) {
+          setRegistrationSubmitted(storedRegistrationSubmitted)
         }
 
         // Show notification only if we actually restored something
@@ -152,6 +157,16 @@ export function AppProvider({children}){
       }
     }
   }, [department, role])
+
+  useEffect(() => {
+    if (role === 'student' && storageManager.getCurrentUser()) {
+      try {
+        storageManager.save('registrationSubmitted', registrationSubmitted)
+      } catch (e) {
+        console.error('Failed to persist registrationSubmitted:', e)
+      }
+    }
+  }, [registrationSubmitted, role])
 
   // persist studentProfile to localStorage whenever it changes
   useEffect(() => {
@@ -323,6 +338,13 @@ export function AppProvider({children}){
     }
   }
 
+  const submitRegistration = () => {
+    if (registrationSubmitted) return // already submitted
+    setRegistrationSubmitted(true)
+    addNotification({text: 'Registration submitted successfully! You can no longer change your program, drop courses, or enroll in new courses.', type:'success'})
+    logAuditEvent('submit_registration', null, null, null, studentProfile?.studentId)
+  }
+
   const markAsRead = (nid) => {
     setNotifications(prev => prev.map(n => n.id === nid ? {...n, read:true} : n))
   }
@@ -395,7 +417,7 @@ export function AppProvider({children}){
     }
   }
 
-  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole, studentProfile, setStudentProfile, logout, storageAvailable, getStorageDebugInfo, auditLog, logAuditEvent}
+  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole, studentProfile, setStudentProfile, logout, storageAvailable, getStorageDebugInfo, auditLog, logAuditEvent, registrationSubmitted, submitRegistration}
 
   // expose course CRUD helpers
   value.createCourse = createCourse
