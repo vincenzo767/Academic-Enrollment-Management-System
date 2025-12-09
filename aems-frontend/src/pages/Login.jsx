@@ -29,6 +29,7 @@ export default function Login(){
       setStudentProfile(prev => ({
         ...prev,
         studentId: data.studentId || data.id || prev.studentId,
+        schoolId: data.schoolId || data.studentId || data.id || prev.schoolId,
         fullName: `${data.firstname || ''} ${data.lastname || ''}`.trim() || prev.fullName,
         email: data.email || prev.email,
         phone: data.phone || prev.phone,

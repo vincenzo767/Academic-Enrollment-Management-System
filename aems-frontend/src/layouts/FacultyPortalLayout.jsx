@@ -15,7 +15,7 @@ export default function FacultyPortalLayout(){
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.profileBox}>
-          <UserAvatar name="Dr. Sarah Johnson" id="20-2000-200" />
+          <UserAvatar name="Dr. Sarah Johnson" id="FACULTY-001" />
         </div>
         <nav className={styles.nav}>
           <NavLink to="/faculty" className={({isActive}) => isActive ? styles.active : ''}>Dashboard</NavLink>

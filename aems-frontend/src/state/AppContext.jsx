@@ -109,16 +109,17 @@ export function AppProvider({children}){
       if(raw) return JSON.parse(raw)
     } catch(e) { /* ignore */ }
     return {
-      fullName: 'John Michael Dien Doe',
-      schoolId: '20-2000-200',
-      email: 'john.doe@university.edu',
-      phone: '+1 (555) 123-4567',
-      yearLevel: '3rd Year',
-      semester: '3rd Semester',
+      fullName: '',
+      schoolId: '',
+      studentId: '',
+      email: '',
+      phone: '',
+      yearLevel: '',
+      semester: '',
       program: '',
-      enrollmentStatus: 'Active',
-      profilePicture: null, // base64 or URL
-      joinDate: '2021-06-15'
+      enrollmentStatus: '',
+      profilePicture: null,
+      joinDate: ''
     }
   }
 
@@ -128,19 +129,22 @@ export function AppProvider({children}){
 
   // Initialize storage manager with current user ID when role is set
   useEffect(() => {
-    if (role === 'student' && studentProfile && studentProfile.studentId) {
-      try {
-        storageManager.setCurrentUser(studentProfile.studentId)
-        
-        // Check if storage is available
-        if (!storageManager.isAvailable) {
-          setStorageAvailable(false)
+    if (role === 'student' && studentProfile) {
+      const userId = studentProfile.studentId || studentProfile.schoolId
+      if (userId) {
+        try {
+          storageManager.setCurrentUser(userId)
+          
+          // Check if storage is available
+          if (!storageManager.isAvailable) {
+            setStorageAvailable(false)
+          }
+        } catch (e) {
+          console.error('Failed to initialize StorageManager:', e)
         }
-      } catch (e) {
-        console.error('Failed to initialize StorageManager:', e)
       }
     }
-  }, [role, studentProfile?.studentId])
+  }, [role, studentProfile?.studentId, studentProfile?.schoolId])
 
   // Restore user-specific data from storage on mount (only once per user)
   useEffect(() => {
@@ -158,8 +162,9 @@ export function AppProvider({children}){
         if (storedEnrolled.length > 0) {
           setEnrolledIds(storedEnrolled)
           // Sync existing enrollments to backend
-          if (studentProfile?.studentId) {
-            syncEnrollmentsToBackend(storedEnrolled, studentProfile.studentId)
+          const sid = studentProfile?.studentId || studentProfile?.schoolId
+          if (sid) {
+            syncEnrollmentsToBackend(storedEnrolled, sid)
           }
         }
         if (storedDepartment) {

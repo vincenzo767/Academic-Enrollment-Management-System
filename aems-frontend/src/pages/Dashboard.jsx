@@ -67,6 +67,7 @@ export default function Dashboard() {
   const recentNotifications = notifications.slice(0, 5)
 
   const getProfileInitials = () => {
+    if (!studentProfile.fullName) return '?'
     return studentProfile.fullName.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase()
   }
 

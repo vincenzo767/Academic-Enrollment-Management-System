@@ -7,7 +7,7 @@ import { useEffect } from 'react'
 
 export default function PortalLayout(){
   const navigate = useNavigate()
-  const { setRole } = useApp()
+  const { setRole, studentProfile } = useApp()
   useEffect(()=>{ setRole && setRole('student') }, [setRole])
   const logout = () => { setRole && setRole(null); navigate('/login') }
 
@@ -15,7 +15,7 @@ export default function PortalLayout(){
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.profileBox}>
-          <UserAvatar name="John Michael Doe Doe" id="03-9000-000" />
+          <UserAvatar name={studentProfile?.fullName || 'Student'} id={studentProfile?.schoolId || ''} />
         </div>
         <nav className={styles.nav}>
           <NavLink to="/portal/dashboard" className={({isActive}) => isActive ? styles.active : ''}>Dashboard</NavLink>
