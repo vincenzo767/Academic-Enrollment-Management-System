@@ -15,6 +15,7 @@ public class Enrollment {
     private String status;
     private Long studentId;
     private Long courseId;
+    private String semester; // 1st Semester, 2nd Semester, Summer
 
     // Constructors
     public Enrollment() {}
@@ -41,4 +42,7 @@ public class Enrollment {
 
     public Long getCourseId() { return courseId; }
     public void setCourseId(Long courseId) { this.courseId = courseId; }
+
+    public String getSemester() { return semester; }
+    public void setSemester(String semester) { this.semester = semester; }
 }

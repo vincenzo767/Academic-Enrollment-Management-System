@@ -9,8 +9,16 @@ export default function FacultyStudents(){
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [error, setError] = useState(null)
   const [approvedStudentIds, setApprovedStudentIds] = useState({})
+  const [selectedSemester, setSelectedSemester] = useState('All')
+  const [statistics, setStatistics] = useState({
+    totalCourses: 0,
+    activeStudents: 0,
+    totalEnrollments: 0,
+    studentsWithEnrollments: 0
+  })
 
   const FACULTY_APPROVALS_KEY = 'aems:facultyApprovals'
+  const semesters = ['All', '1st Semester', '2nd Semester', 'Summer']
 
   // fetch function extracted so we can retry from UI
   const fetchData = async (signal) => {
@@ -80,19 +88,46 @@ export default function FacultyStudents(){
         // Refresh data when approvals change in another tab
         fetchData(new AbortController().signal)
       } catch (e) {
-        console.error('Failed to apply storage sync update', e)
+        console.error('Failed to sync approvals', e)
       }
     }
     
-    window.addEventListener('aems:facultyApproval', onApprovalEvent)
+    window.addEventListener('studentApproved', onApprovalEvent)
     window.addEventListener('storage', onStorage)
     
-    return () => {
+    return ()=> {
       controller.abort()
-      window.removeEventListener('aems:facultyApproval', onApprovalEvent)
+      window.removeEventListener('studentApproved', onApprovalEvent)
       window.removeEventListener('storage', onStorage)
     }
-  },[])
+  }, [])
+
+  // Fetch statistics with semester filter
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const url = selectedSemester === 'All' 
+          ? 'http://localhost:8080/api/statistics/faculty'
+          : `http://localhost:8080/api/statistics/faculty?semester=${encodeURIComponent(selectedSemester)}`
+        const res = await fetch(url)
+        if (res.ok) {
+          const data = await res.json()
+          setStatistics({
+            totalCourses: data.totalCourses || 0,
+            activeStudents: data.activeStudents || 0,
+            totalEnrollments: data.totalEnrollments || 0,
+            studentsWithEnrollments: data.activeStudents || 0
+          })
+        }
+      } catch (error) {
+        console.error('Failed to fetch statistics:', error)
+      }
+    }
+    
+    fetchStatistics()
+    const interval = setInterval(fetchStatistics, 30000)
+    return () => clearInterval(interval)
+  }, [selectedSemester])
 
   // compute per-student enrollment counts with full course details
   const studentRows = useMemo(()=>{
@@ -143,25 +178,49 @@ export default function FacultyStudents(){
 
   return (
     <div>
+      {/* Semester Filter */}
+      <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',marginBottom:16}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <label style={{fontWeight:600}}>Semester:</label>
+          <select 
+            value={selectedSemester}
+            onChange={(e) => setSelectedSemester(e.target.value)}
+            style={{
+              padding:'8px 12px',
+              borderRadius:6,
+              border:'1px solid #ccc',
+              fontSize:14,
+              cursor:'pointer',
+              background:'white'
+            }}
+          >
+            {semesters.map(sem => (
+              <option key={sem} value={sem}>{sem}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,flex:1}}>
           <div style={{background:'#eee',padding:16,borderRadius:8}}>
             <div>Total Courses</div>
-            <div style={{fontSize:32,fontWeight:700}}>{/* could fetch */}—</div>
+            <div style={{fontSize:32,fontWeight:700}}>{statistics.totalCourses}</div>
           </div>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
-          <div>Active Students</div>
-          <div style={{fontSize:32,fontWeight:700}}>{students.length}</div>
-        </div>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
-          <div>Total Enrollments</div>
-          <div style={{fontSize:32,fontWeight:700}}>{enrollments.length}</div>
-        </div>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
-          <div>Students With Enrollments</div>
-          <div style={{fontSize:32,fontWeight:700}}>{studentRows.filter(r=>r.enrolledCount>0).length}</div>
-        </div>
-        <button onClick={()=>fetchData(new AbortController().signal)} style={{padding:'16px',background:'#3b82f6',color:'white',border:'none',borderRadius:8,cursor:'pointer',fontWeight:600}}>🔄 Refresh Data</button>
+          <div style={{background:'#eee',padding:16,borderRadius:8}}>
+            <div>Active Students</div>
+            <div style={{fontSize:32,fontWeight:700}}>{statistics.activeStudents}</div>
+          </div>
+          <div style={{background:'#eee',padding:16,borderRadius:8}}>
+            <div>Total Enrollments</div>
+            <div style={{fontSize:32,fontWeight:700}}>{statistics.totalEnrollments}</div>
+          </div>
+          <div style={{background:'#eee',padding:16,borderRadius:8}}>
+            <div>Students With Enrollments</div>
+            <div style={{fontSize:32,fontWeight:700}}>{statistics.studentsWithEnrollments}</div>
+          </div>
+          <button onClick={()=>fetchData(new AbortController().signal)} style={{padding:'16px',background:'#3b82f6',color:'white',border:'none',borderRadius:8,cursor:'pointer',fontWeight:600}}>🔄 Refresh Data</button>
         </div>
       </div>
 

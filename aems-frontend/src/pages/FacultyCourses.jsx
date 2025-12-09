@@ -7,6 +7,49 @@ export default function FacultyCourses(){
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCourse, setEditingCourse] = useState(null)
   const [formData, setFormData] = useState({ code:'', title:'', description:'', credits:3, instructorId: null })
+  const [statistics, setStatistics] = useState({
+    totalCourses: 0,
+    activeStudents: 0,
+    totalEnrollments: 0,
+    capacityUsed: 0,
+    avgEnrollmentPerStudent: 0
+  })
+  const [loading, setLoading] = useState(true)
+
+  // Fetch real-time statistics
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/statistics/faculty')
+        if (res.ok) {
+          const data = await res.json()
+          setStatistics(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch statistics:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchStatistics()
+    // Refresh statistics every 30 seconds
+    const interval = setInterval(fetchStatistics, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Function to refresh statistics manually
+  const refreshStatistics = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/api/statistics/faculty')
+      if (res.ok) {
+        const data = await res.json()
+        setStatistics(data)
+      }
+    } catch (error) {
+      console.error('Failed to refresh statistics:', error)
+    }
+  }
 
   const handleEdit = (course) => {
     setEditingCourse(course)
@@ -28,6 +71,8 @@ export default function FacultyCourses(){
       setIsModalOpen(false)
       setEditingCourse(null)
       setFormData({code:'', title:'', description:'', credits:3, instructorId: null})
+      // Refresh statistics after course changes
+      refreshStatistics()
     } catch(e){
       alert('Failed to save course')
     }
@@ -38,6 +83,8 @@ export default function FacultyCourses(){
       try{
         const id = course.id || course.courseId
         await deleteCourseById(id)
+        // Refresh statistics after deletion
+        refreshStatistics()
       } catch(e){ alert('Delete failed') }
     }
   }
@@ -50,23 +97,35 @@ export default function FacultyCourses(){
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:24}}>
         <div style={{background:'#eee',padding:16,borderRadius:8}}>
           <div>Total Courses</div>
-          <div style={{fontSize:32,fontWeight:700}}>24</div>
-          <div style={{color:'#777'}}>+12% from last semester</div>
+          <div style={{fontSize:32,fontWeight:700}}>
+            {loading ? '...' : statistics.totalCourses}
+          </div>
+          <div style={{color:'#777'}}>Active courses</div>
         </div>
         <div style={{background:'#eee',padding:16,borderRadius:8}}>
           <div>Active Students</div>
-          <div style={{fontSize:32,fontWeight:700}}>249</div>
-          <div style={{color:'#777'}}>+12% from last semester</div>
+          <div style={{fontSize:32,fontWeight:700}}>
+            {loading ? '...' : statistics.activeStudents}
+          </div>
+          <div style={{color:'#777'}}>Enrolled students</div>
         </div>
         <div style={{background:'#eee',padding:16,borderRadius:8}}>
           <div>Total Enrollments</div>
-          <div style={{fontSize:32,fontWeight:700}}>1,024</div>
-          <div style={{color:'#777'}}>Avg. 3/5 per student</div>
+          <div style={{fontSize:32,fontWeight:700}}>
+            {loading ? '...' : statistics.totalEnrollments.toLocaleString()}
+          </div>
+          <div style={{color:'#777'}}>
+            Avg. {statistics.avgEnrollmentPerStudent}/student
+          </div>
         </div>
         <div style={{background:'#eee',padding:16,borderRadius:8}}>
           <div>Capacity Used</div>
-          <div style={{fontSize:32,fontWeight:700}}>84%</div>
-          <div style={{color:'#777'}}>Optimal enrollment</div>
+          <div style={{fontSize:32,fontWeight:700}}>
+            {loading ? '...' : `${statistics.capacityUsed}%`}
+          </div>
+          <div style={{color:'#777'}}>
+            {statistics.capacityUsed < 70 ? 'Low enrollment' : statistics.capacityUsed < 85 ? 'Optimal enrollment' : 'High enrollment'}
+          </div>
         </div>
       </div>
 
