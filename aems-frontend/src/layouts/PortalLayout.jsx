@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import styles from '../styles/layout.module.css'
 import Sidebar from '../components/Sidebar.jsx'
+import NightModeToggle from '../components/NightModeToggle.jsx'
 import { useApp } from '../state/AppContext.js'
-import { useEffect } from 'react'
 
 export default function PortalLayout(){
   const navigate = useNavigate()
@@ -34,6 +34,7 @@ export default function PortalLayout(){
         portalType="student"
       />
       <main className={styles.content}>
+        <NightModeToggle />
         <header className={styles.header}>
           <div>
             <h2>Student Portal</h2>

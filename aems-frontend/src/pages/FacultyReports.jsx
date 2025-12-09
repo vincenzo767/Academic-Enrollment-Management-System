@@ -93,7 +93,7 @@ export default function FacultyReports(){
   }, [activeTab, selectedSemester])
 
   const card = (title) => (
-    <div style={{background:'#fff',border:'1px dashed #ccc',borderRadius:12,padding:24,minHeight:120,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,letterSpacing:1}}>
+    <div style={{background:'var(--card)',border:'1px dashed var(--border)',borderRadius:12,padding:24,minHeight:120,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,letterSpacing:1,color:'var(--text)'}}>
       {title}
     </div>
   )
@@ -243,26 +243,26 @@ export default function FacultyReports(){
     <div>
       {/* Statistics Cards */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:24}}>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
-          <div>Total Courses</div>
+        <div style={{background:'var(--card)',border:'1px solid var(--border)',padding:16,borderRadius:8,color:'var(--text)'}}>
+          <div style={{color:'var(--text-secondary)'}}>Total Courses</div>
           <div style={{fontSize:32,fontWeight:700}}>
             {loading ? '...' : statistics.totalCourses}
           </div>
         </div>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
-          <div>Active Students</div>
+        <div style={{background:'var(--card)',border:'1px solid var(--border)',padding:16,borderRadius:8,color:'var(--text)'}}>
+          <div style={{color:'var(--text-secondary)'}}>Active Students</div>
           <div style={{fontSize:32,fontWeight:700}}>
             {loading ? '...' : statistics.activeStudents}
           </div>
         </div>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
-          <div>Total Enrollments</div>
+        <div style={{background:'var(--card)',border:'1px solid var(--border)',padding:16,borderRadius:8,color:'var(--text)'}}>
+          <div style={{color:'var(--text-secondary)'}}>Total Enrollments</div>
           <div style={{fontSize:32,fontWeight:700}}>
             {loading ? '...' : statistics.totalEnrollments.toLocaleString()}
           </div>
         </div>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
-          <div>Capacity Used</div>
+        <div style={{background:'var(--card)',border:'1px solid var(--border)',padding:16,borderRadius:8,color:'var(--text)'}}>
+          <div style={{color:'var(--text-secondary)'}}>Capacity Used</div>
           <div style={{fontSize:32,fontWeight:700}}>
             {loading ? '...' : `${statistics.capacityUsed}%`}
           </div>
@@ -271,19 +271,20 @@ export default function FacultyReports(){
 
       {/* Semester Filter */}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-        <h3 style={{margin:0}}>Analytics & Reports</h3>
+        <h3 style={{margin:0,color:'var(--text)'}}>Analytics & Reports</h3>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
-          <label style={{fontWeight:600}}>Semester:</label>
+          <label style={{fontWeight:600,color:'var(--text)'}}>Semester:</label>
           <select 
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value)}
             style={{
               padding:'8px 12px',
               borderRadius:6,
-              border:'1px solid #ccc',
+              border:'1px solid var(--border)',
               fontSize:14,
               cursor:'pointer',
-              background:'white'
+              background:'var(--card)',
+              color:'var(--text)'
             }}
           >
             {semesters.map(sem => (
@@ -294,15 +295,15 @@ export default function FacultyReports(){
       </div>
       
       {/* Tab Navigation */}
-      <div style={{display:'flex',gap:8,marginBottom:16,borderBottom:'2px solid #e5e7eb'}}>
+      <div style={{display:'flex',gap:8,marginBottom:16,borderBottom:'2px solid var(--border)'}}>
         <button 
           onClick={() => setActiveTab('enrollment')}
           style={{
             padding:'12px 24px',
-            background: activeTab === 'enrollment' ? '#1e40af' : 'transparent',
-            color: activeTab === 'enrollment' ? '#fff' : '#666',
+            background: activeTab === 'enrollment' ? 'var(--accent)' : 'transparent',
+            color: activeTab === 'enrollment' ? '#fff' : 'var(--text-secondary)',
             border:'none',
-            borderBottom: activeTab === 'enrollment' ? '3px solid #1e40af' : 'none',
+            borderBottom: activeTab === 'enrollment' ? `3px solid var(--accent)` : 'none',
             cursor:'pointer',
             fontWeight:600,
             transition:'all 0.2s'
@@ -314,10 +315,10 @@ export default function FacultyReports(){
           onClick={() => setActiveTab('demographics')}
           style={{
             padding:'12px 24px',
-            background: activeTab === 'demographics' ? '#1e40af' : 'transparent',
-            color: activeTab === 'demographics' ? '#fff' : '#666',
+            background: activeTab === 'demographics' ? 'var(--accent)' : 'transparent',
+            color: activeTab === 'demographics' ? '#fff' : 'var(--text-secondary)',
             border:'none',
-            borderBottom: activeTab === 'demographics' ? '3px solid #1e40af' : 'none',
+            borderBottom: activeTab === 'demographics' ? `3px solid var(--accent)` : 'none',
             cursor:'pointer',
             fontWeight:600,
             transition:'all 0.2s'
@@ -329,10 +330,10 @@ export default function FacultyReports(){
           onClick={() => setActiveTab('capacity')}
           style={{
             padding:'12px 24px',
-            background: activeTab === 'capacity' ? '#1e40af' : 'transparent',
-            color: activeTab === 'capacity' ? '#fff' : '#666',
+            background: activeTab === 'capacity' ? 'var(--accent)' : 'transparent',
+            color: activeTab === 'capacity' ? '#fff' : 'var(--text-secondary)',
             border:'none',
-            borderBottom: activeTab === 'capacity' ? '3px solid #1e40af' : 'none',
+            borderBottom: activeTab === 'capacity' ? `3px solid var(--accent)` : 'none',
             cursor:'pointer',
             fontWeight:600,
             transition:'all 0.2s'
@@ -344,10 +345,10 @@ export default function FacultyReports(){
           onClick={() => setActiveTab('program')}
           style={{
             padding:'12px 24px',
-            background: activeTab === 'program' ? '#1e40af' : 'transparent',
-            color: activeTab === 'program' ? '#fff' : '#666',
+            background: activeTab === 'program' ? 'var(--accent)' : 'transparent',
+            color: activeTab === 'program' ? '#fff' : 'var(--text-secondary)',
             border:'none',
-            borderBottom: activeTab === 'program' ? '3px solid #1e40af' : 'none',
+            borderBottom: activeTab === 'program' ? `3px solid var(--accent)` : 'none',
             cursor:'pointer',
             fontWeight:600,
             transition:'all 0.2s'
@@ -358,7 +359,7 @@ export default function FacultyReports(){
       </div>
 
       {/* Chart Display Area */}
-      <div style={{background:'#fff',borderRadius:12,padding:24,minHeight:400,border:'1px solid #e5e7eb'}}>
+      <div style={{background:'var(--card)',borderRadius:12,padding:24,minHeight:400,border:'1px solid var(--border)',color:'var(--text)'}}>
         {renderChart()}
       </div>
     </div>

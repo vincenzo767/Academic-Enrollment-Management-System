@@ -260,7 +260,7 @@ export default function Dashboard() {
         <div className={styles.changeProgramOverlay}>
           <div className={styles.changeProgramModal} role="dialog" aria-modal="true">
             <div className={styles.changeProgramLeft}>
-              <h3 style={{marginTop:0}}>Programs</h3>
+              <h3 style={{marginTop:0, color:'var(--text)'}}>Programs</h3>
               <div className={styles.changeProgramList}>
                 {programList.map(p => (
                   <div key={p.name} className={styles.changeProgramItem} onClick={()=>setPendingProgram(p)}>
@@ -270,15 +270,15 @@ export default function Dashboard() {
               </div>
             </div>
             <div className={styles.changeProgramRight}>
-              <h3 style={{marginTop:0}}>Selection</h3>
-              <div style={{minHeight:120,display:'flex',flexDirection:'column',justifyContent:'center',padding:12,border:'1px solid #eef2f7',borderRadius:6}}>
+              <h3 style={{marginTop:0, color:'var(--text)'}}>Selection</h3>
+              <div style={{minHeight:120,display:'flex',flexDirection:'column',justifyContent:'center',padding:12,border:'1px solid var(--border)',borderRadius:6,background:'var(--bg)',color:'var(--text)'}}>
                 {pendingProgram ? (
                   <div>
-                    <div style={{fontWeight:700,marginBottom:6}}>{pendingProgram.name}</div>
-                    <div style={{color:'#6b7280'}}>Prefixes: {pendingProgram.prefixes.join(', ')}</div>
+                    <div style={{fontWeight:700,marginBottom:6,color:'var(--text)'}}>{pendingProgram.name}</div>
+                    <div style={{color:'var(--text-secondary)'}}>Prefixes: {pendingProgram.prefixes.join(', ')}</div>
                   </div>
                 ) : (
-                  <div style={{color:'#6b7280'}}>Select a program from the left to preview and confirm.</div>
+                  <div style={{color:'var(--text-secondary)'}}>Select a program from the left to preview and confirm.</div>
                 )}
               </div>
 

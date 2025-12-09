@@ -54,7 +54,7 @@
 .roleModal h3{
   margin-top:0;
   margin-bottom:24px;
-  color:#333;
+  color:var(--text);
   font-size:20px;
 }
 
@@ -65,8 +65,8 @@
 }
 
 .roleOption{
-  background:#f5f5f5;
-  border:2px solid #e0e0e0;
+  background:var(--bg);
+  border:2px solid var(--border);
   padding:24px;
   border-radius:12px;
   cursor:pointer;
@@ -76,12 +76,12 @@
   align-items:center;
   gap:8px;
   font-weight:600;
-  color:#333;
+  color:var(--text);
 }
 
 .roleOption:hover{
-  border-color:#ffcc00;
-  background:#fffef0;
+  border-color:var(--accent);
+  background:var(--card);
   box-shadow:0 4px 12px rgba(255,204,0,0.2);
 }
 

@@ -1,7 +1,7 @@
 .shell{display:grid;grid-template-columns:auto 1fr;height:100vh}
-.content{background:#fff;overflow:auto;height:100vh}
-.header{display:flex;align-items:end;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #eee;background:#fff}
+.content{background:var(--card);overflow:auto;height:100vh;transition: background-color 0.3s ease;}
+.header{display:flex;align-items:end;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--card);transition: background-color 0.3s ease, border-color 0.3s ease;}
 .tabs{display:flex;gap:8px}
-.tab, .tabActive{padding:8px 12px;border-radius:18px;border:1px solid #e5e7eb;color:#374151;text-decoration:none}
-.tabActive{background:#111827;color:#fff;border-color:#111827}
-.body{padding:24px;background:#f9fafb;min-height:calc(100vh - 96px)}
+.tab, .tabActive{padding:8px 12px;border-radius:18px;border:1px solid var(--border);color:var(--text);text-decoration:none;transition: all 0.3s ease;}
+.tabActive{background:var(--navy);color:#fff;border-color:var(--navy)}
+.body{padding:24px;background:var(--bg);min-height:calc(100vh - 96px);transition: background-color 0.3s ease;}

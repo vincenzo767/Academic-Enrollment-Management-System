@@ -52,6 +52,44 @@ export function AppProvider({children}){
   const [auditLog, setAuditLog] = useState([])
   const perUnit = 500 // fee per unit (demo)
   
+  // Night mode state
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('darkMode')
+      return saved === 'true'
+    } catch (e) {
+      return false
+    }
+  })
+
+  // Toggle night mode and persist
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => {
+      const newValue = !prev
+      try {
+        localStorage.setItem('darkMode', String(newValue))
+        // Apply to document root
+        if (newValue) {
+          document.documentElement.setAttribute('data-theme', 'dark')
+        } else {
+          document.documentElement.removeAttribute('data-theme')
+        }
+      } catch (e) {
+        console.error('Failed to persist dark mode:', e)
+      }
+      return newValue
+    })
+  }
+
+  // Apply dark mode on mount
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark')
+    } else {
+      document.documentElement.removeAttribute('data-theme')
+    }
+  }, [isDarkMode])
+  
   // Sync existing localStorage enrollments to backend
   const syncEnrollmentsToBackend = async (enrolledCourseIds, studentId) => {
     if (!studentId || !enrolledCourseIds || enrolledCourseIds.length === 0) return
@@ -587,7 +625,7 @@ export function AppProvider({children}){
     }
   }
 
-  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole, studentProfile, setStudentProfile, logout, storageAvailable, getStorageDebugInfo, auditLog, logAuditEvent, registrationSubmitted, submitRegistration}
+  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole, studentProfile, setStudentProfile, logout, storageAvailable, getStorageDebugInfo, auditLog, logAuditEvent, registrationSubmitted, submitRegistration, isDarkMode, toggleDarkMode}
 
   // expose course CRUD helpers
   value.createCourse = createCourse

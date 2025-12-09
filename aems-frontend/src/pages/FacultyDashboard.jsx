@@ -515,40 +515,40 @@ export default function FacultyDashboard() {
         <h2 className={styles.sectionTitle}>📋 Pending Enrollment Requests</h2>
         
         <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <input placeholder="Search by student name, ID, program, or course..." style={{ flex: 1, padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '6px', marginRight: '12px' }} />
-          <button style={{ padding: '10px 16px', background: '#0b5fff', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>View All</button>
+          <input placeholder="Search by student name, ID, program, or course..." style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '6px', marginRight: '12px', background: 'var(--card)', color: 'var(--text)' }} />
+          <button style={{ padding: '10px 16px', background: 'var(--accent-2)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>View All</button>
         </div>
 
-        <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '16px', overflowX: 'auto' }}>
+        <div style={{ background: 'var(--card)', borderRadius: '12px', padding: '16px', overflowX: 'auto', border: '1px solid var(--border)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
-                <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Student</th>
-                <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Program</th>
-                <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Enrolled Courses</th>
-                <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Date</th>
-                <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Status</th>
-                <th align="left" style={{ padding: '12px', fontWeight: '600', color: '#6b7280' }}>Actions</th>
+              <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                <th align="left" style={{ padding: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>Student</th>
+                <th align="left" style={{ padding: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>Program</th>
+                <th align="left" style={{ padding: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>Enrolled Courses</th>
+                <th align="left" style={{ padding: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>Date</th>
+                <th align="left" style={{ padding: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>Status</th>
+                <th align="left" style={{ padding: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {studentRecords.map((record, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                <tr key={idx} style={{ borderBottom: '1px solid var(--border)', background: 'var(--card)' }}>
                   <td style={{ padding: '12px' }}>
-                    <div style={{ fontWeight: '600' }}>{record.name}</div>
-                    <div style={{ fontSize: '12px', color: '#6b7280' }}>{record.studentId}</div>
+                    <div style={{ fontWeight: '600', color: 'var(--text)' }}>{record.name}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{record.studentId}</div>
                   </td>
-                  <td style={{ padding: '12px' }}>{record.program}</td>
-                  <td style={{ padding: '12px', fontWeight: '700' }}>{record.courseCount ?? 0}</td>
-                  <td style={{ padding: '12px' }}>{record.date}</td>
+                  <td style={{ padding: '12px', color: 'var(--text)' }}>{record.program}</td>
+                  <td style={{ padding: '12px', fontWeight: '700', color: 'var(--text)' }}>{record.courseCount ?? 0}</td>
+                  <td style={{ padding: '12px', color: 'var(--text)' }}>{record.date}</td>
                   <td style={{ padding: '12px' }}>
-                    <span style={{ background: record.status === 'Registered' ? '#dcfce7' : '#fef3c7', color: record.status === 'Registered' ? '#166534' : '#92400e', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
+                    <span style={{ background: record.status === 'Registered' ? 'var(--success)' : 'var(--warning)', color: record.status === 'Registered' ? '#fff' : '#000', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
                       {record.status}
                     </span>
                   </td>
                   <td style={{ padding: '12px' }}>
-                    <button onClick={() => handleEnrollmentAction('Approved', record.studentId)} style={{ marginRight: '8px', padding: '6px 12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>✓</button>
-                    <button onClick={() => handleEnrollmentAction('Rejected', record.studentId)} style={{ padding: '6px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>✕</button>
+                    <button onClick={() => handleEnrollmentAction('Approved', record.studentId)} style={{ marginRight: '8px', padding: '6px 12px', background: 'var(--success)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>✓</button>
+                    <button onClick={() => handleEnrollmentAction('Rejected', record.studentId)} style={{ padding: '6px 12px', background: 'var(--danger)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>✕</button>
                   </td>
                 </tr>
               ))}
@@ -569,10 +569,10 @@ export default function FacultyDashboard() {
         ) : (
           <div className={styles.notificationsList}>
             {recentActivity.map(activity => (
-              <div key={activity.id} style={{ padding: '12px', borderRadius: '6px', borderLeft: '4px solid', background: activity.type === 'success' ? '#ecfdf5' : activity.type === 'error' ? '#fef2f2' : '#eef6ff', borderColor: activity.type === 'success' ? '#10b981' : activity.type === 'error' ? '#ef4444' : '#0b5fff', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
+              <div key={activity.id} style={{ padding: '12px', borderRadius: '6px', borderLeft: '4px solid', background: activity.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : activity.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)', borderColor: activity.type === 'success' ? 'var(--success)' : activity.type === 'error' ? 'var(--danger)' : 'var(--accent-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{activity.text}</div>
-                  <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>{activity.time}</div>
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text)' }}>{activity.text}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>{activity.time}</div>
                 </div>
               </div>
             ))}
@@ -583,74 +583,74 @@ export default function FacultyDashboard() {
       {/* Edit Profile Modal */}
       {showEditProfile && (
         <Modal onClose={() => setShowEditProfile(false)}>
-          <h3>Edit Faculty Profile</h3>
+          <h3 style={{color: 'var(--text)'}}>Edit Faculty Profile</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>First Name</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: 'var(--text)' }}>First Name</label>
               <input
                 type="text"
                 value={editFormData.firstName}
                 onChange={(e) => setEditFormData({ ...editFormData, firstName: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '14px', background: 'var(--card)', color: 'var(--text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Last Name</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: 'var(--text)' }}>Last Name</label>
               <input
                 type="text"
                 value={editFormData.lastName}
                 onChange={(e) => setEditFormData({ ...editFormData, lastName: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '14px', background: 'var(--card)', color: 'var(--text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Email</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: 'var(--text)' }}>Email</label>
               <input
                 type="email"
                 value={editFormData.email}
                 onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '14px', background: 'var(--card)', color: 'var(--text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Phone</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: 'var(--text)' }}>Phone</label>
               <input
                 type="tel"
                 value={editFormData.phone}
                 onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '14px', background: 'var(--card)', color: 'var(--text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Department</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: 'var(--text)' }}>Department</label>
               <input
                 type="text"
                 value={editFormData.department}
                 onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '14px', background: 'var(--card)', color: 'var(--text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Office Location</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: 'var(--text)' }}>Office Location</label>
               <input
                 type="text"
                 value={editFormData.officeLocation}
                 onChange={(e) => setEditFormData({ ...editFormData, officeLocation: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '14px', background: 'var(--card)', color: 'var(--text)' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#111827' }}>Office Hours</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: 'var(--text)' }}>Office Hours</label>
               <input
                 type="text"
                 value={editFormData.officeHours}
                 onChange={(e) => setEditFormData({ ...editFormData, officeHours: e.target.value })}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '14px', background: 'var(--card)', color: 'var(--text)' }}
               />
             </div>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '16px' }}>
-              <button onClick={() => setShowEditProfile(false)} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
-              <button onClick={handleProfileUpdate} style={{ padding: '10px 20px', background: '#0b5fff', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Save Changes</button>
+              <button onClick={() => setShowEditProfile(false)} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', color: 'var(--text)' }}>Cancel</button>
+              <button onClick={handleProfileUpdate} style={{ padding: '10px 20px', background: 'var(--accent-2)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Save Changes</button>
             </div>
           </div>
         </Modal>
@@ -659,16 +659,16 @@ export default function FacultyDashboard() {
       {/* Confirmation Dialog */}
       {confirmDialog && (
         <div style={{position:'fixed',left:0,top:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:9999}}>
-          <div style={{background:'white',padding:24,borderRadius:12,minWidth:400,boxShadow:'0 10px 40px rgba(0,0,0,0.2)'}}>
-            <h3 style={{marginTop:0,marginBottom:16,fontSize:18,fontWeight:700,color:'#111827'}}>{confirmDialog.message}</h3>
-            <p style={{marginBottom:24,color:'#6b7280',fontSize:14}}>
+          <div style={{background:'var(--card)',padding:24,borderRadius:12,minWidth:400,boxShadow:'0 10px 40px rgba(0,0,0,0.2)',color:'var(--text)'}}>
+            <h3 style={{marginTop:0,marginBottom:16,fontSize:18,fontWeight:700,color:'var(--text)'}}>{confirmDialog.message}</h3>
+            <p style={{marginBottom:24,color:'var(--text-secondary)',fontSize:14}}>
               {confirmDialog.type === 'approve' ? 'Once enrolled, this student will be moved to the approved list.' : 'This will cancel the enrollment request for this student.'}
             </p>
             <div style={{display:'flex',gap:12,justifyContent:'flex-end'}}>
-              <button onClick={cancelConfirmDialog} style={{padding:'10px 20px',background:'transparent',border:'1px solid #d1d5db',borderRadius:'6px',cursor:'pointer',fontWeight:'600',color:'#374151'}}>
+              <button onClick={cancelConfirmDialog} style={{padding:'10px 20px',background:'transparent',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',fontWeight:'600',color:'var(--text)'}}>
                 Cancel
               </button>
-              <button onClick={confirmEnrollmentAction} style={{padding:'10px 20px',background:confirmDialog.type === 'approve' ? '#10b981' : '#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',fontWeight:'600'}}>
+              <button onClick={confirmEnrollmentAction} style={{padding:'10px 20px',background:confirmDialog.type === 'approve' ? 'var(--success)' : 'var(--danger)',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',fontWeight:'600'}}>
                 {confirmDialog.type === 'approve' ? '✓ Enroll' : '✕ Cancel'}
               </button>
             </div>

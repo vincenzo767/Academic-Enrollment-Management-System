@@ -92,50 +92,49 @@ export default function FacultyCourses(){
   return (
     <div>
       <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}>
-        <button onClick={() => setIsModalOpen(true)} style={{padding:'8px 12px',background:'#28a745',color:'#fff',border:'none',borderRadius:6,cursor:'pointer'}}>Add Course</button>
+        <button onClick={() => setIsModalOpen(true)} style={{padding:'8px 12px',background:'var(--success)',color:'#fff',border:'none',borderRadius:6,cursor:'pointer'}}>Add Course</button>
       </div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:24}}>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
+        <div style={{background:'var(--card)',padding:16,borderRadius:8,border:'1px solid var(--border)',color:'var(--text)'}}>
           <div>Total Courses</div>
           <div style={{fontSize:32,fontWeight:700}}>
             {loading ? '...' : statistics.totalCourses}
           </div>
-          <div style={{color:'#777'}}>Active courses</div>
+          <div style={{color:'var(--text-secondary)'}}>Active courses</div>
         </div>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
+        <div style={{background:'var(--card)',padding:16,borderRadius:8,border:'1px solid var(--border)',color:'var(--text)'}}>
           <div>Active Students</div>
           <div style={{fontSize:32,fontWeight:700}}>
             {loading ? '...' : statistics.activeStudents}
           </div>
-          <div style={{color:'#777'}}>Enrolled students</div>
+          <div style={{color:'var(--text-secondary)'}}>Enrolled students</div>
         </div>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
+        <div style={{background:'var(--card)',padding:16,borderRadius:8,border:'1px solid var(--border)',color:'var(--text)'}}>
           <div>Total Enrollments</div>
           <div style={{fontSize:32,fontWeight:700}}>
             {loading ? '...' : statistics.totalEnrollments.toLocaleString()}
           </div>
-          <div style={{color:'#777'}}>
-            Avg. {statistics.avgEnrollmentPerStudent}/student
+          <div style={{color:'var(--text-secondary)'}}>            Avg. {statistics.avgEnrollmentPerStudent}/student
           </div>
         </div>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
+        <div style={{background:'var(--card)',padding:16,borderRadius:8,border:'1px solid var(--border)',color:'var(--text)'}}>
           <div>Capacity Used</div>
           <div style={{fontSize:32,fontWeight:700}}>
             {loading ? '...' : `${statistics.capacityUsed}%`}
           </div>
-          <div style={{color:'#777'}}>
+          <div style={{color:'var(--text-secondary)'}}>
             {statistics.capacityUsed < 70 ? 'Low enrollment' : statistics.capacityUsed < 85 ? 'Optimal enrollment' : 'High enrollment'}
           </div>
         </div>
       </div>
 
       <div style={{margin:'16px 0'}}>
-        <input placeholder="Search by course, name, code or department.." style={{width:'100%',padding:12,border:'1px solid #ccc',borderRadius:8}} />
+        <input placeholder="Search by course, name, code or department.." style={{width:'100%',padding:12,border:'1px solid var(--border)',borderRadius:8,background:'var(--card)',color:'var(--text)'}} />
       </div>
 
-      <div style={{background:'#f5f5f5',borderRadius:12,padding:16}}>
-        <h3>Course Management</h3>
-        <table style={{width:'100%'}}>
+      <div style={{background:'var(--card)',borderRadius:12,padding:16,border:'1px solid var(--border)'}}>
+        <h3 style={{color:'var(--text)'}}>Course Management</h3>
+        <table style={{width:'100%',color:'var(--text)'}}>
           <thead>
             <tr>
               <th align="left">Code</th>
@@ -168,43 +167,43 @@ export default function FacultyCourses(){
 
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
-          <h3>{editingCourse ? 'Edit Course' : 'Add Course'}</h3>
+          <h3 style={{color:'var(--text)'}}>{ editingCourse ? 'Edit Course' : 'Add Course'}</h3>
           <div style={{display:'flex',flexDirection:'column',gap:12}}>
             <input
               type="text"
               placeholder="Course Code"
               value={formData.code}
               onChange={(e) => setFormData({...formData, code: e.target.value})}
-              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
+              style={{padding:8,border:'1px solid var(--border)',borderRadius:4,background:'var(--card)',color:'var(--text)'}}
             />
             <input
               type="text"
               placeholder="Course Title"
               value={formData.title}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
-              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
+              style={{padding:8,border:'1px solid var(--border)',borderRadius:4,background:'var(--card)',color:'var(--text)'}}
             />
             <textarea
               placeholder="Description"
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
-              style={{padding:8,border:'1px solid #ccc',borderRadius:4,minHeight:80}}
+              style={{padding:8,border:'1px solid var(--border)',borderRadius:4,minHeight:80,background:'var(--card)',color:'var(--text)'}}
             />
             <input
               type="text"
               placeholder="Instructor ID"
               value={formData.instructorId || ''}
               onChange={(e) => setFormData({...formData, instructorId: e.target.value})}
-              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
+              style={{padding:8,border:'1px solid var(--border)',borderRadius:4,background:'var(--card)',color:'var(--text)'}}
             />
             <input
               type="number"
               placeholder="Credits"
               value={formData.credits}
               onChange={(e) => setFormData({...formData, credits: parseInt(e.target.value)})}
-              style={{padding:8,border:'1px solid #ccc',borderRadius:4}}
+              style={{padding:8,border:'1px solid var(--border)',borderRadius:4,background:'var(--card)',color:'var(--text)'}}
             />
-            <button onClick={handleSave} style={{padding:12,background:'#007bff',color:'white',border:'none',borderRadius:4,cursor:'pointer'}}>
+            <button onClick={handleSave} style={{padding:12,background:'var(--accent-2)',color:'white',border:'none',borderRadius:4,cursor:'pointer'}}>
               {editingCourse ? 'Save Changes' : 'Add Course'}
             </button>
           </div>

@@ -188,10 +188,11 @@ export default function FacultyStudents(){
             style={{
               padding:'8px 12px',
               borderRadius:6,
-              border:'1px solid #ccc',
+              border:'1px solid var(--border)',
               fontSize:14,
               cursor:'pointer',
-              background:'white'
+              background:'var(--card)',
+              color:'var(--text)'
             }}
           >
             {semesters.map(sem => (
@@ -204,32 +205,32 @@ export default function FacultyStudents(){
       {/* Statistics Cards */}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,flex:1}}>
-          <div style={{background:'#eee',padding:16,borderRadius:8}}>
+          <div style={{background:'var(--card)',padding:16,borderRadius:8,border:'1px solid var(--border)',color:'var(--text)'}}>
             <div>Total Courses</div>
             <div style={{fontSize:32,fontWeight:700}}>{statistics.totalCourses}</div>
           </div>
-          <div style={{background:'#eee',padding:16,borderRadius:8}}>
+          <div style={{background:'var(--card)',padding:16,borderRadius:8,border:'1px solid var(--border)',color:'var(--text)'}}>
             <div>Active Students</div>
             <div style={{fontSize:32,fontWeight:700}}>{statistics.activeStudents}</div>
           </div>
-          <div style={{background:'#eee',padding:16,borderRadius:8}}>
+          <div style={{background:'var(--card)',padding:16,borderRadius:8,border:'1px solid var(--border)',color:'var(--text)'}}>
             <div>Total Enrollments</div>
             <div style={{fontSize:32,fontWeight:700}}>{statistics.totalEnrollments}</div>
           </div>
-          <div style={{background:'#eee',padding:16,borderRadius:8}}>
+          <div style={{background:'var(--card)',padding:16,borderRadius:8,border:'1px solid var(--border)',color:'var(--text)'}}>
             <div>Students With Enrollments</div>
             <div style={{fontSize:32,fontWeight:700}}>{statistics.studentsWithEnrollments}</div>
           </div>
-          <button onClick={()=>fetchData(new AbortController().signal)} style={{padding:'16px',background:'#3b82f6',color:'white',border:'none',borderRadius:8,cursor:'pointer',fontWeight:600}}>🔄 Refresh Data</button>
+          <button onClick={()=>fetchData(new AbortController().signal)} style={{padding:'16px',background:'var(--accent-2)',color:'white',border:'none',borderRadius:8,cursor:'pointer',fontWeight:600}}>🔄 Refresh Data</button>
         </div>
       </div>
 
       <div style={{margin:'16px 0'}}>
-        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search students.." style={{width:'100%',padding:12,border:'1px solid #ccc',borderRadius:8}} />
+        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search students.." style={{width:'100%',padding:12,border:'1px solid var(--border)',borderRadius:8,background:'var(--card)',color:'var(--text)'}} />
       </div>
 
-      <div style={{background:'#f5f5f5',borderRadius:12,padding:16}}>
-        <h3>Student Records</h3>
+      <div style={{background:'var(--card)',borderRadius:12,padding:16,border:'1px solid var(--border)'}}>
+        <h3 style={{color:'var(--text)'}}>Student Records</h3>
         {loading ? (
           <div>Loading students…</div>
         ) : error ? (

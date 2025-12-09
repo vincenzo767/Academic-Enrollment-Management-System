@@ -12,7 +12,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   width: 240px;
-  transition: width 0.3s ease, padding 0.3s ease;
+  transition: width 0.3s ease, padding 0.3s ease, background-color 0.3s ease;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 100;
 }

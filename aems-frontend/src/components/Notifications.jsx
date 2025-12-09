@@ -11,27 +11,27 @@ export default function Notifications(){
 
   return (
     <div style={{position:'fixed', right:16, top:16, zIndex:9999, fontFamily:'sans-serif'}}>
-      <button onClick={()=>setOpen(o=>!o)} style={{background:'#0b5fff', color:'#fff', border:'none', padding:'8px 12px', borderRadius:6, cursor:'pointer'}} title="Notifications">
-        🔔 {unread.length > 0 && <span style={{background:'#ff3b30', color:'#fff', padding:'2px 6px', borderRadius:12, marginLeft:8}}>{unread.length}</span>}
+      <button onClick={()=>setOpen(o=>!o)} style={{background:'var(--accent-2)', color:'#fff', border:'none', padding:'8px 12px', borderRadius:6, cursor:'pointer'}} title="Notifications">
+        🔔 {unread.length > 0 && <span style={{background:'var(--danger)', color:'#fff', padding:'2px 6px', borderRadius:12, marginLeft:8}}>{unread.length}</span>}
       </button>
 
       {open && (
-        <div style={{width:360, maxHeight:420, overflowY:'auto', background:'#fff', boxShadow:'0 6px 20px rgba(0,0,0,0.12)', marginTop:8, borderRadius:8}}>
-          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:12, borderBottom:'1px solid #eee'}}>
-            <strong>Notifications</strong>
+        <div style={{width:360, maxHeight:420, overflowY:'auto', background:'var(--card)', boxShadow:'0 6px 20px var(--shadow)', marginTop:8, borderRadius:8}}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:12, borderBottom:'1px solid var(--border)'}}>
+            <strong style={{color:'var(--text)'}}>Notifications</strong>
             <div>
               <button onClick={()=>{markAllRead();}} style={{marginRight:8}} className="btn-outline-small">Mark all read</button>
               <button onClick={()=>setOpen(false)} className="btn-outline-small">Close</button>
             </div>
           </div>
           <div>
-            {visible.length === 0 && <div style={{padding:12, color:'#666'}}>No notifications</div>}
+            {visible.length === 0 && <div style={{padding:12, color:'var(--text-secondary)'}}>No notifications</div>}
             {visible.map(n => (
-              <div key={n.id} style={{padding:12, borderBottom:'1px solid #f4f4f4', background: n.read ? '#fff' : '#eef6ff'}}>
+              <div key={n.id} style={{padding:12, borderBottom:'1px solid var(--border)', background: n.read ? 'var(--card)' : 'var(--bg)'}}>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                  <div style={{fontSize:13, fontWeight: n.read ? 500 : 700}}>{n.text}</div>
+                  <div style={{fontSize:13, fontWeight: n.read ? 500 : 700, color:'var(--text)'}}>{n.text}</div>
                   <div style={{display:'flex', gap:8, alignItems:'center'}}>
-                    <div style={{fontSize:11, color:'#888'}}>{new Date(n.timestamp).toLocaleTimeString()}</div>
+                    <div style={{fontSize:11, color:'var(--text-secondary)'}}>{new Date(n.timestamp).toLocaleTimeString()}</div>
                     {!n.read && <button onClick={()=>markAsRead(n.id)} className="btn-outline-small">Mark as read</button>}
                   </div>
                 </div>

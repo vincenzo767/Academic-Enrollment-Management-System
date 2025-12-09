@@ -1,0 +1,37 @@
+.container {
+  position: fixed;
+  right: 80px;
+  top: 16px;
+  z-index: 9999;
+  font-family: sans-serif;
+}
+
+.toggleButton {
+  background: var(--card);
+  color: var(--text);
+  border: 2px solid var(--border, #e5e7eb);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.toggleButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-color: var(--accent-2);
+}
+
+.toggleButton:active {
+  transform: translateY(0);
+}
+
+[data-theme="dark"] .toggleButton {
+  background: var(--card);
+  border-color: #4b5563;
+}
