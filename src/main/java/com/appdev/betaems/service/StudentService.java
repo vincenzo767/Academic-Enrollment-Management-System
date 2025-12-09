@@ -31,17 +31,27 @@ public class StudentService {
         Optional<Student> optionalStudent = studentRepository.findById(id);
         if (optionalStudent.isPresent()) {
             Student student = optionalStudent.get();
-            student.setFirstname(studentDetails.getFirstname());
-            student.setLastname(studentDetails.getLastname());
-            student.setEmail(studentDetails.getEmail());
-            student.setPhone(studentDetails.getPhone());
-            student.setDateOfBirth(studentDetails.getDateOfBirth());
-            student.setAddress(studentDetails.getAddress());
-            // update program if provided
-            try {
+            // Only update fields that are explicitly provided (non-null)
+            if (studentDetails.getFirstname() != null) {
+                student.setFirstname(studentDetails.getFirstname());
+            }
+            if (studentDetails.getLastname() != null) {
+                student.setLastname(studentDetails.getLastname());
+            }
+            if (studentDetails.getEmail() != null) {
+                student.setEmail(studentDetails.getEmail());
+            }
+            if (studentDetails.getPhone() != null) {
+                student.setPhone(studentDetails.getPhone());
+            }
+            if (studentDetails.getDateOfBirth() != null) {
+                student.setDateOfBirth(studentDetails.getDateOfBirth());
+            }
+            if (studentDetails.getAddress() != null) {
+                student.setAddress(studentDetails.getAddress());
+            }
+            if (studentDetails.getProgram() != null) {
                 student.setProgram(studentDetails.getProgram());
-            } catch (Exception ex) {
-                // ignore if field not present
             }
             return studentRepository.save(student);
         }

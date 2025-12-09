@@ -190,7 +190,14 @@ export function AppProvider({children}){
       phone: studentProfile.phone || null,
       program: studentProfile.program || null
     }
-    axiosInstance.put(`/student/${sid}`, payload).catch(e => console.error('Could not persist profile to server', e))
+    console.log(`[AppContext] Persisting student profile update to backend: studentId=${sid}, program=${payload.program}`)
+    axiosInstance.put(`/student/${sid}`, payload)
+      .then(response => {
+        console.log(`[AppContext] Successfully persisted profile to server for student ${sid}:`, response.data)
+      })
+      .catch(e => {
+        console.error(`[AppContext] Failed to persist profile to server for student ${sid}:`, e.message, e.response?.data || e)
+      })
   }, [studentProfile])
 
   // load courses from backend and provide CRUD helpers

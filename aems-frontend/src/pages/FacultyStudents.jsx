@@ -93,11 +93,12 @@ export default function FacultyStudents(){
 
   return (
     <div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:24}}>
-        <div style={{background:'#eee',padding:16,borderRadius:8}}>
-          <div>Total Courses</div>
-          <div style={{fontSize:32,fontWeight:700}}>{/* could fetch */}—</div>
-        </div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,flex:1}}>
+          <div style={{background:'#eee',padding:16,borderRadius:8}}>
+            <div>Total Courses</div>
+            <div style={{fontSize:32,fontWeight:700}}>{/* could fetch */}—</div>
+          </div>
         <div style={{background:'#eee',padding:16,borderRadius:8}}>
           <div>Active Students</div>
           <div style={{fontSize:32,fontWeight:700}}>{students.length}</div>
@@ -109,6 +110,8 @@ export default function FacultyStudents(){
         <div style={{background:'#eee',padding:16,borderRadius:8}}>
           <div>Students With Enrollments</div>
           <div style={{fontSize:32,fontWeight:700}}>{studentRows.filter(r=>r.enrolledCount>0).length}</div>
+        </div>
+        <button onClick={()=>fetchData(new AbortController().signal)} style={{padding:'16px',background:'#3b82f6',color:'white',border:'none',borderRadius:8,cursor:'pointer',fontWeight:600}}>🔄 Refresh Data</button>
         </div>
       </div>
 
