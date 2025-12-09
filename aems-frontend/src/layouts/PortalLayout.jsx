@@ -1,7 +1,7 @@
 import React from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import styles from '../styles/layout.module.css'
-import UserAvatar from '../components/UserAvatar.jsx'
+import Sidebar from '../components/Sidebar.jsx'
 import { useApp } from '../state/AppContext.js'
 import { useEffect } from 'react'
 
@@ -11,21 +11,28 @@ export default function PortalLayout(){
   useEffect(()=>{ setRole && setRole('student') }, [setRole])
   const logout = () => { setRole && setRole(null); navigate('/login') }
 
+  const studentNavLinks = [
+    { label: 'Dashboard', path: '/portal/dashboard', icon: '/assets/dashboard.png' },
+    { label: 'Browse Courses', path: '/portal/browse', icon: '/assets/browse_course.png' },
+    { label: 'My Courses', path: '/portal/my-courses', icon: '/assets/my_course.png' },
+    { label: 'Schedule', path: '/portal/schedule', icon: '/assets/schedule.png' },
+    { label: 'Payments', path: '/portal/payments', icon: '/assets/payments.png' }
+  ]
+
+  const userInfo = {
+    name: studentProfile?.fullName || 'Student',
+    id: studentProfile?.schoolId || '',
+    role: 'Student'
+  }
+
   return (
     <div className={styles.shell}>
-      <aside className={styles.sidebar}>
-        <div className={styles.profileBox}>
-          <UserAvatar name={studentProfile?.fullName || 'Student'} id={studentProfile?.schoolId || ''} />
-        </div>
-        <nav className={styles.nav}>
-          <NavLink to="/portal/dashboard" className={({isActive}) => isActive ? styles.active : ''}>Dashboard</NavLink>
-          <NavLink to="/portal/browse" className={({isActive}) => isActive ? styles.active : ''}>Browse</NavLink>
-          <NavLink to="/portal/my-courses" className={({isActive}) => isActive ? styles.active : ''}>My Courses</NavLink>
-          <NavLink to="/portal/schedule" className={({isActive}) => isActive ? styles.active : ''}>Schedule</NavLink>
-          <NavLink to="/portal/payments" className={({isActive}) => isActive ? styles.active : ''}>Payments</NavLink>
-        </nav>
-        <button onClick={logout} className={styles.logout}>Logout</button>
-      </aside>
+      <Sidebar
+        userInfo={userInfo}
+        navLinks={studentNavLinks}
+        onLogout={logout}
+        portalType="student"
+      />
       <main className={styles.content}>
         <header className={styles.header}>
           <div>

@@ -1,7 +1,7 @@
 import React from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import styles from '../styles/layout.module.css'
-import UserAvatar from '../components/UserAvatar.jsx'
+import Sidebar from '../components/Sidebar.jsx'
 import { useApp } from '../state/AppContext.js'
 import { useEffect } from 'react'
 
@@ -11,20 +11,27 @@ export default function FacultyPortalLayout(){
   useEffect(()=>{ setRole && setRole('faculty') }, [setRole])
   const logout = () => { setRole && setRole(null); navigate('/faculty-login') }
 
+  const facultyNavLinks = [
+    { label: 'Dashboard', path: '/faculty', icon: '/assets/dashboard.png' },
+    { label: 'Courses', path: '/faculty/courses', icon: '/assets/my_course.png' },
+    { label: 'Students', path: '/faculty/students', icon: '/assets/students.png' },
+    { label: 'Reports', path: '/faculty/reports', icon: '/assets/reports.png' }
+  ]
+
+  const userInfo = {
+    name: 'Dr. Sarah Johnson',
+    id: 'FACULTY-001',
+    role: 'Faculty'
+  }
+
   return (
     <div className={styles.shell}>
-      <aside className={styles.sidebar}>
-        <div className={styles.profileBox}>
-          <UserAvatar name="Dr. Sarah Johnson" id="FACULTY-001" />
-        </div>
-        <nav className={styles.nav}>
-          <NavLink to="/faculty" className={({isActive}) => isActive ? styles.active : ''}>Dashboard</NavLink>
-          <NavLink to="/faculty/courses" className={({isActive}) => isActive ? styles.active : ''}>Courses</NavLink>
-          <NavLink to="/faculty/students" className={({isActive}) => isActive ? styles.active : ''}>Students</NavLink>
-          <NavLink to="/faculty/reports" className={({isActive}) => isActive ? styles.active : ''}>Reports</NavLink>
-        </nav>
-        <button onClick={logout} className={styles.logout}>Logout</button>
-      </aside>
+      <Sidebar
+        userInfo={userInfo}
+        navLinks={facultyNavLinks}
+        onLogout={logout}
+        portalType="faculty"
+      />
       <main className={styles.content}>
         <header className={styles.header}>
           <div>

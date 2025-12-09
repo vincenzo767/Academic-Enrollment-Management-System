@@ -1,11 +1,4 @@
-.shell{display:grid;grid-template-columns:240px 1fr;height:100vh}
-.sidebar{background:var(--navy);color:#fff;display:flex;flex-direction:column;gap:16px;padding:16px;position:sticky;top:0;align-self:start;height:100vh;overflow:auto}
-.profileBox{padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.1)}
-.nav{display:flex;flex-direction:column;gap:8px}
-.nav a{color:#cfe2ff;text-decoration:none;padding:10px;border-radius:6px}
-.nav a:hover{background:rgba(255,255,255,.08)}
-.active{background:#0a1a2a;color:#fff}
-.logout{margin-top:auto;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:8px;cursor:pointer}
+.shell{display:grid;grid-template-columns:auto 1fr;height:100vh}
 .content{background:#fff;overflow:auto;height:100vh}
 .header{display:flex;align-items:end;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #eee;background:#fff}
 .tabs{display:flex;gap:8px}
