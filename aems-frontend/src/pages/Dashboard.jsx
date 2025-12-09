@@ -13,6 +13,56 @@ export default function Dashboard() {
   const [showConfirmChange, setShowConfirmChange] = useState(false)
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
 
+  // Sync enrollments to backend on mount
+  useEffect(() => {
+    const syncEnrollments = async () => {
+      if (!studentProfile?.studentId || !enrolledIds || enrolledIds.length === 0) return
+      
+      try {
+        // Get backend courses to map frontend IDs
+        const coursesRes = await fetch('/api/courses')
+        const backendCourses = await coursesRes.json()
+        
+        // Get existing enrollments
+        const existingRes = await fetch('/api/enrollments')
+        const existing = await existingRes.json()
+        const existingCourseIds = existing
+          .filter(e => e.studentId === studentProfile.studentId)
+          .map(e => e.courseId)
+        
+        // Sync each enrolled course
+        for (const frontendCourseId of enrolledIds) {
+          const frontendCourse = courses.find(c => c.id === frontendCourseId)
+          if (!frontendCourse) continue
+          
+          const backendCourse = backendCourses.find(c => 
+            c.courseCode === frontendCourse.code || c.title === frontendCourse.title
+          )
+          
+          const courseIdToUse = backendCourse ? backendCourse.courseId : frontendCourseId
+          
+          if (!existingCourseIds.includes(courseIdToUse)) {
+            await fetch('/api/enrollments', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                studentId: studentProfile.studentId,
+                courseId: courseIdToUse,
+                enrollmentDate: new Date().toISOString().split('T')[0],
+                status: 'pending'
+              })
+            })
+            console.log('Synced enrollment:', frontendCourse.code, '->', courseIdToUse)
+          }
+        }
+      } catch (e) {
+        console.error('Failed to sync enrollments:', e)
+      }
+    }
+    
+    syncEnrollments()
+  }, []) // Only run once on mount
+
   const enrolledCourses = courses.filter(c => enrolledIds.includes(c.id))
   const recentNotifications = notifications.slice(0, 5)
 

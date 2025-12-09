@@ -17,7 +17,9 @@ export default function FacultyDashboard() {
   const [studentRecords, setStudentRecords] = useState([])
   const [recentActivity, setRecentActivity] = useState([])
   const [localSync, setLocalSync] = useState({})
+  const [approvedStudentIds, setApprovedStudentIds] = useState({})
   const [showEditProfile, setShowEditProfile] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState(null)
   const [editFormData, setEditFormData] = useState({
     firstName: '',
     lastName: '',
@@ -31,6 +33,7 @@ export default function FacultyDashboard() {
   const localSyncRef = useRef({})
 
   const FACULTY_SYNC_KEY = 'aems:facultySync'
+  const FACULTY_APPROVALS_KEY = 'aems:facultyApprovals'
 
   const semesters = ['1st Semester', '2nd Semester', 'Summer']
 
@@ -124,6 +127,18 @@ export default function FacultyDashboard() {
       }
     }
 
+    const loadApprovals = () => {
+      try {
+        const raw = localStorage.getItem(FACULTY_APPROVALS_KEY)
+        const parsed = raw ? JSON.parse(raw) : {}
+        setApprovedStudentIds(parsed)
+        return parsed
+      } catch (e) {
+        console.error('Failed to read approvals', e)
+        return {}
+      }
+    }
+
     const applyLocalOverrides = (records, overrides) => {
       const merged = mergeWithLocalOverrides(records, overrides)
       setStudentRecords(merged)
@@ -201,7 +216,15 @@ export default function FacultyDashboard() {
 
         // merge with any local overrides coming from the student portal for instant updates
         const overrides = localSyncRef.current || {}
-        applyLocalOverrides(records, overrides)
+        let merged = mergeWithLocalOverrides(records, overrides)
+        
+        // Load latest approvals before filtering
+        const latestApprovals = loadApprovals()
+        
+        // filter out already-approved students from pending view
+        merged = merged.filter(r => !latestApprovals[String(r.studentId)])
+        
+        applyLocalOverrides(merged, overrides)
 
         // Update stats based on merged records
         const mergedStats = computeStats(mergeWithLocalOverrides(records, overrides))
@@ -228,6 +251,7 @@ export default function FacultyDashboard() {
 
     // initial load (includes any local overrides)
     loadLocalSync()
+    loadApprovals()
     fetchEnrollmentData()
 
     // poll every 5 seconds to pick up live changes (e.g., student profile updates)
@@ -266,16 +290,42 @@ export default function FacultyDashboard() {
       })
     }
 
+    const onApprovalEvent = (evt) => {
+      if (!evt.detail || !evt.detail.studentId) return
+      const sid = String(evt.detail.studentId)
+      const updated = { ...approvedStudentIds, [sid]: true }
+      setApprovedStudentIds(updated)
+      // remove from pending view
+      setStudentRecords(prev => prev.filter(r => !updated[String(r.studentId)]))
+      setEnrollmentStats(prev => ({ ...prev, pendingEnrollments: Math.max(0, prev.pendingEnrollments - 1), requiresAttention: Math.max(0, prev.requiresAttention - 1) }))
+    }
+
     window.addEventListener('storage', onStorage)
     window.addEventListener('aems:facultySync', onLocalSyncEvent)
+    window.addEventListener('aems:facultyApproval', onApprovalEvent)
 
     return () => {
       if (intervalId) clearInterval(intervalId)
       window.removeEventListener('focus', onFocus)
       window.removeEventListener('storage', onStorage)
       window.removeEventListener('aems:facultySync', onLocalSyncEvent)
+      window.removeEventListener('aems:facultyApproval', onApprovalEvent)
     }
   }, [selectedSemester])
+
+  // Re-filter pending students whenever approvals change
+  useEffect(() => {
+    if (studentRecords.length === 0) return
+    const filtered = studentRecords.filter(r => !approvedStudentIds[String(r.studentId)])
+    if (filtered.length !== studentRecords.length) {
+      setStudentRecords(filtered)
+      setEnrollmentStats(prev => ({
+        ...prev,
+        pendingEnrollments: filtered.filter(r => r.status === 'Pending').length,
+        requiresAttention: filtered.filter(r => r.status === 'Pending').length
+      }))
+    }
+  }, [approvedStudentIds])
 
   const handleProfileUpdate = async () => {
     try {
@@ -311,7 +361,55 @@ export default function FacultyDashboard() {
   }
 
   const handleEnrollmentAction = (status, studentId) => {
-    alert(`Enrollment ${status}: ${studentId}`)
+    if (status === 'Approved') {
+      setConfirmDialog({
+        type: 'approve',
+        studentId,
+        message: 'Enroll This Student?'
+      })
+    } else if (status === 'Rejected') {
+      setConfirmDialog({
+        type: 'reject',
+        studentId,
+        message: 'Cancel Enrollment?'
+      })
+    }
+  }
+
+  const confirmEnrollmentAction = async () => {
+    if (!confirmDialog) return
+
+    if (confirmDialog.type === 'approve') {
+      try {
+        const raw = localStorage.getItem(FACULTY_APPROVALS_KEY)
+        const approvals = raw ? JSON.parse(raw) : {}
+        approvals[String(confirmDialog.studentId)] = true
+        localStorage.setItem(FACULTY_APPROVALS_KEY, JSON.stringify(approvals))
+        
+        // update local state immediately
+        const updated = { ...approvedStudentIds, [String(confirmDialog.studentId)]: true }
+        setApprovedStudentIds(updated)
+        
+        // remove from pending view
+        setStudentRecords(prev => prev.filter(r => !updated[String(r.studentId)]))
+        setEnrollmentStats(prev => ({ ...prev, pendingEnrollments: Math.max(0, prev.pendingEnrollments - 1), requiresAttention: Math.max(0, prev.requiresAttention - 1) }))
+        
+        // notify other listeners
+        window.dispatchEvent(new CustomEvent('aems:facultyApproval', { detail: { studentId: String(confirmDialog.studentId) } }))
+      } catch (e) {
+        console.error('Failed to approve student', e)
+        alert('Failed to approve student. Please try again.')
+      }
+    } else if (confirmDialog.type === 'reject') {
+      // Placeholder for rejection logic
+      alert(`Enrollment cancelled for student: ${confirmDialog.studentId}`)
+    }
+
+    setConfirmDialog(null)
+  }
+
+  const cancelConfirmDialog = () => {
+    setConfirmDialog(null)
   }
 
   const getProfileInitials = () => {
@@ -556,6 +654,26 @@ export default function FacultyDashboard() {
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Confirmation Dialog */}
+      {confirmDialog && (
+        <div style={{position:'fixed',left:0,top:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:9999}}>
+          <div style={{background:'white',padding:24,borderRadius:12,minWidth:400,boxShadow:'0 10px 40px rgba(0,0,0,0.2)'}}>
+            <h3 style={{marginTop:0,marginBottom:16,fontSize:18,fontWeight:700,color:'#111827'}}>{confirmDialog.message}</h3>
+            <p style={{marginBottom:24,color:'#6b7280',fontSize:14}}>
+              {confirmDialog.type === 'approve' ? 'Once enrolled, this student will be moved to the approved list.' : 'This will cancel the enrollment request for this student.'}
+            </p>
+            <div style={{display:'flex',gap:12,justifyContent:'flex-end'}}>
+              <button onClick={cancelConfirmDialog} style={{padding:'10px 20px',background:'transparent',border:'1px solid #d1d5db',borderRadius:'6px',cursor:'pointer',fontWeight:'600',color:'#374151'}}>
+                Cancel
+              </button>
+              <button onClick={confirmEnrollmentAction} style={{padding:'10px 20px',background:confirmDialog.type === 'approve' ? '#10b981' : '#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',fontWeight:'600'}}>
+                {confirmDialog.type === 'approve' ? '✓ Enroll' : '✕ Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

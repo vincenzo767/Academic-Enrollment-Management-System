@@ -8,6 +8,9 @@ export default function FacultyStudents(){
   const [loading, setLoading] = useState(true)
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [error, setError] = useState(null)
+  const [approvedStudentIds, setApprovedStudentIds] = useState({})
+
+  const FACULTY_APPROVALS_KEY = 'aems:facultyApprovals'
 
   // fetch function extracted so we can retry from UI
   const fetchData = async (signal) => {
@@ -50,40 +53,87 @@ export default function FacultyStudents(){
   useEffect(()=>{
     const controller = new AbortController()
     fetchData(controller.signal)
-    return () => controller.abort()
+    
+    // Load approvals
+    try {
+      const raw = localStorage.getItem(FACULTY_APPROVALS_KEY)
+      const parsed = raw ? JSON.parse(raw) : {}
+      setApprovedStudentIds(parsed)
+    } catch (e) {
+      console.error('Failed to load approvals', e)
+    }
+    
+    // Listen for approval events
+    const onApprovalEvent = (evt) => {
+      if (!evt.detail || !evt.detail.studentId) return
+      const sid = String(evt.detail.studentId)
+      setApprovedStudentIds(prev => ({ ...prev, [sid]: true }))
+      // Refresh data to show newly approved student
+      fetchData(new AbortController().signal)
+    }
+    
+    const onStorage = (evt) => {
+      if (evt.key !== FACULTY_APPROVALS_KEY) return
+      try {
+        const parsed = evt.newValue ? JSON.parse(evt.newValue) : {}
+        setApprovedStudentIds(parsed)
+        // Refresh data when approvals change in another tab
+        fetchData(new AbortController().signal)
+      } catch (e) {
+        console.error('Failed to apply storage sync update', e)
+      }
+    }
+    
+    window.addEventListener('aems:facultyApproval', onApprovalEvent)
+    window.addEventListener('storage', onStorage)
+    
+    return () => {
+      controller.abort()
+      window.removeEventListener('aems:facultyApproval', onApprovalEvent)
+      window.removeEventListener('storage', onStorage)
+    }
   },[])
 
-  // compute per-student enrollment counts and recent actions (with course names)
+  // compute per-student enrollment counts with full course details
   const studentRows = useMemo(()=>{
     const courseMap = new Map()
     courses.forEach(c => {
-      courseMap.set(c.courseId, c.title || c.name || `Course ${c.courseId}`)
+      courseMap.set(c.courseId, { 
+        id: c.courseId,
+        title: c.title || c.name || `Course ${c.courseId}`,
+        schedule: c.schedule || 'TBA'
+      })
     })
 
     const map = new Map()
     students.forEach(s => {
       const sid = String(s.studentId)
-      map.set(sid, { student: s, enrolledCount: 0, actions: [] })
+      map.set(sid, { student: s, enrolledCount: 0, enrolledCourses: [] })
     })
 
     // accumulate enrollments
     enrollments.forEach(e => {
       const sid = String(e.studentId)
-      const entry = map.get(sid) || { student: { studentId: e.studentId }, enrolledCount: 0, actions: [] }
-      if(e.status && e.status.toLowerCase() === 'enrolled') entry.enrolledCount = (entry.enrolledCount || 0) + 1
-      // record action with course name resolved
-      entry.actions = entry.actions || []
-      const courseName = courseMap.get(e.courseId) || `Course ${e.courseId}`
-      entry.actions.push({ type: e.status || 'unknown', courseId: e.courseId, courseName, date: e.enrollmentDate })
+      const entry = map.get(sid) || { student: { studentId: e.studentId }, enrolledCount: 0, enrolledCourses: [] }
+      // Count all enrollments that are not explicitly dropped or cancelled
+      const statusLower = (e.status || '').toLowerCase()
+      if(statusLower && statusLower !== 'dropped' && statusLower !== 'cancelled') {
+        entry.enrolledCount = (entry.enrolledCount || 0) + 1
+        const courseInfo = courseMap.get(e.courseId) || { id: e.courseId, title: `Course ${e.courseId}`, schedule: 'TBA' }
+        entry.enrolledCourses.push(courseInfo)
+      }
       map.set(sid, entry)
     })
 
     const rows = []
-    map.forEach((v,k) => rows.push({ student: v.student, enrolledCount: v.enrolledCount || 0, actions: (v.actions||[]).sort((a,b)=> new Date(b.date) - new Date(a.date)) }))
+    map.forEach((v,k) => rows.push({ student: v.student, enrolledCount: v.enrolledCount || 0, enrolledCourses: v.enrolledCourses || [] }))
     return rows
   },[students,enrollments,courses])
 
   const filtered = studentRows.filter(r => {
+    // Only show approved students
+    if (!approvedStudentIds[String(r.student.studentId)]) return false
+    
     if(!query) return true
     const q = query.toLowerCase()
     const name = ((r.student.firstname || '') + ' ' + (r.student.lastname || '')).toString().toLowerCase()
@@ -139,27 +189,20 @@ export default function FacultyStudents(){
               <th align="left">Name</th>
               <th align="left">Email</th>
               <th align="left">Enrolled Courses</th>
-              <th align="left">Recent Actions</th>
+              <th align="left">Status</th>
               <th align="left">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((r, idx)=> (
               <tr key={idx}>
-                <td>{(r.student.firstname || '') + ' ' + (r.student.lastname || '')}</td>
+                <td>{(r.student.firstname || '') + ' ' + (r.student.lastname || '')} <small style={{color:'#999'}}>(ID: {r.student.studentId})</small></td>
                 <td>{r.student.email || '-'}</td>
-                <td>{r.enrolledCount}</td>
+                <td>{r.enrolledCount} {r.enrolledCount === 0 && <small style={{color:'#999'}}>(No enrollments found)</small>}</td>
                 <td>
-                  {r.actions && r.actions.length > 0 ? (
-                    <div style={{display:'flex',flexDirection:'column'}}>
-                      {r.actions.slice(0,3).map((a,i)=> (
-                        <div key={i} style={{fontSize:12,color:'#333'}}>{a.type} — {a.courseName} — {a.date}</div>
-                      ))}
-                      {r.actions.length > 3 && <div style={{fontSize:12,color:'#666'}}>+{r.actions.length-3} more</div>}
-                    </div>
-                  ) : (
-                    <div style={{color:'#999'}}>No recent actions</div>
-                  )}
+                  <span style={{ background: '#dcfce7', color: '#166534', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
+                    Active
+                  </span>
                 </td>
                 <td>
                   <button onClick={()=>setSelectedStudent(r)} style={{marginRight:8}}>View</button>
@@ -174,22 +217,34 @@ export default function FacultyStudents(){
       {/* Modal / Drawer for detail view */}
       {selectedStudent && (
         <div style={{position:'fixed',left:0,top:0,right:0,bottom:0,background:'rgba(0,0,0,0.35)',display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setSelectedStudent(null)}>
-          <div style={{background:'white',padding:20,borderRadius:8,minWidth:520}} onClick={(e)=>e.stopPropagation()}>
+          <div style={{background:'white',padding:20,borderRadius:8,minWidth:520,maxHeight:'80vh',overflow:'auto'}} onClick={(e)=>e.stopPropagation()}>
             <h3>{(selectedStudent.student.firstname || '') + ' ' + (selectedStudent.student.lastname || '')}</h3>
             <p><strong>Student ID:</strong> {selectedStudent.student.studentId}</p>
             <p><strong>Email:</strong> {selectedStudent.student.email || '-'}</p>
             <p><strong>Enrolled Courses:</strong> {selectedStudent.enrolledCount}</p>
-            <h4>Recent Actions</h4>
-            <div style={{maxHeight:240,overflow:'auto'}}>
-              {selectedStudent.actions && selectedStudent.actions.length > 0 ? (
-                selectedStudent.actions.map((a,i)=> (
-                  <div key={i} style={{padding:8,borderBottom:'1px solid #eee'}}>
-                    <div style={{fontSize:14}}><strong>{a.type}</strong> — {a.courseName}</div>
-                    <div style={{fontSize:12,color:'#666'}}>{a.date}</div>
-                  </div>
-                ))
+            <h4>Enrolled Courses</h4>
+            <div style={{maxHeight:300,overflow:'auto'}}>
+              {selectedStudent.enrolledCourses && selectedStudent.enrolledCourses.length > 0 ? (
+                <table style={{width:'100%',borderCollapse:'collapse'}}>
+                  <thead>
+                    <tr style={{borderBottom:'2px solid #e5e7eb'}}>
+                      <th align="left" style={{padding:'8px',fontWeight:'600'}}>Course ID</th>
+                      <th align="left" style={{padding:'8px',fontWeight:'600'}}>Course Name</th>
+                      <th align="left" style={{padding:'8px',fontWeight:'600'}}>Schedule</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedStudent.enrolledCourses.map((course,i)=> (
+                      <tr key={i} style={{borderBottom:'1px solid #e5e7eb'}}>
+                        <td style={{padding:'8px',fontSize:'12px'}}>{course.id}</td>
+                        <td style={{padding:'8px',fontSize:'12px'}}>{course.title}</td>
+                        <td style={{padding:'8px',fontSize:'12px'}}>{course.schedule}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               ) : (
-                <div style={{color:'#666'}}>No recorded actions for this student.</div>
+                <div style={{color:'#666',padding:'8px'}}>No enrolled courses for this student.</div>
               )}
             </div>
             <div style={{marginTop:12,display:'flex',justifyContent:'flex-end',gap:8}}>
