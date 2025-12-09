@@ -18,15 +18,22 @@ import FacultyReports from './pages/FacultyReports.jsx'
 import { AppProvider } from './state/AppContext.jsx'
 import Notifications from './components/Notifications.jsx'
 
-export default function App() {
+function AppRoutes() {
   const location = useLocation()
   const isLogin = location && location.pathname === '/login'
   const isRoot = location && (location.pathname === '/' || location.pathname === '')
   const isRegister = location && location.pathname === '/register'
   const isFacultyLogin = location && location.pathname === '/faculty-login'
 
+  // Disable dark mode on Starter, Login, Register, and Faculty Login pages
+  React.useEffect(() => {
+    if (isRoot || isLogin || isRegister || isFacultyLogin) {
+      document.documentElement.removeAttribute('data-theme')
+    }
+  }, [isRoot, isLogin, isRegister, isFacultyLogin])
+
   return (
-    <AppProvider>
+    <>
       {!(isLogin || isRoot || isRegister || isFacultyLogin) && <Notifications />}
       <Routes>
       <Route path="/" element={<Starter />} />
@@ -52,6 +59,14 @@ export default function App() {
 
       <Route path="*" element={<div style={{padding: 24}}>Not Found</div>} />
       </Routes>
+    </>
+  )
+}
+
+export default function App() {
+  return (
+    <AppProvider>
+      <AppRoutes />
     </AppProvider>
   )
 }
