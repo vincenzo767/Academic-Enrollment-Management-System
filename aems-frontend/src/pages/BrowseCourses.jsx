@@ -5,13 +5,17 @@ import styles from '../styles/browse.module.css'
 import { useApp } from '../state/AppContext.js'
 import { programList } from '../state/mockData.js'
 
+
 export default function BrowseCourses(){
   const [query, setQuery] = useState('')
   const [modal, setModal] = useState(null) // {type: 'success'|'conflict', course}
   const [confirmProgram, setConfirmProgram] = useState(null) // program object waiting confirmation
   const [selectedProgram, setSelectedProgram] = useState(null) // chosen program after confirmation
+  const [selectedSemester, setSelectedSemester] = useState('') // chosen semester after confirmation
   const [programCourses, setProgramCourses] = useState(null)
   const [lockedModal, setLockedModal] = useState(null) // {type:'needProgram'|'locked', message}
+
+  const SEMESTERS = ['1st Semester', '2nd Semester', 'Summer']
 
   const { filteredCourses, departments, department, setDepartment, toggleReserve, enrollCourse, courses, studentProfile, setStudentProfile, registrationSubmitted } = useApp()
 
@@ -21,8 +25,9 @@ export default function BrowseCourses(){
       const p = programList.find(x=> x.name === studentProfile.program)
       if(p){
         setSelectedProgram(p)
+        setSelectedSemester(studentProfile.semester || '')
         const prefixes = p.prefixes || []
-        const list = courses.filter(c=> prefixes.some(pf => c.code.toUpperCase().startsWith(pf)))
+        const list = courses.filter(c=> prefixes.some(pf => c.code.toUpperCase().startsWith(pf)) && (!studentProfile.semester || c.semester === studentProfile.semester))
         setProgramCourses(list)
       }
     }
@@ -58,12 +63,20 @@ export default function BrowseCourses(){
     }
   }
 
+  // Filter courses by program and semester
   const filtered = useMemo(()=>{
     const q = query.trim().toLowerCase()
     let list = filteredCourses
+    if(selectedProgram) {
+      const prefixes = selectedProgram.prefixes || []
+      list = list.filter(c=> prefixes.some(pf => c.code.toUpperCase().startsWith(pf)))
+    }
+    if(selectedSemester) {
+      list = list.filter(c=> c.semester === selectedSemester)
+    }
     if(q) list = list.filter(c=> c.code.toLowerCase().includes(q) || c.title.toLowerCase().includes(q) || c.instructor.toLowerCase().includes(q))
     return list
-  },[query, filteredCourses])
+  },[query, filteredCourses, selectedProgram, selectedSemester])
 
   return (
     <div>
@@ -79,7 +92,7 @@ export default function BrowseCourses(){
           <select disabled={!!(studentProfile && studentProfile.program) || registrationSubmitted} value={selectedProgram ? selectedProgram.name : (studentProfile && studentProfile.program ? studentProfile.program : 'none')} onChange={e=>{
             const val = e.target.value
             if(val === 'none'){
-              setConfirmProgram(null); setSelectedProgram(null); setProgramCourses(null)
+              setConfirmProgram(null); setSelectedProgram(null); setProgramCourses(null); setSelectedSemester('');
               return
             }
             const p = programList.find(x=> x.name === val)
@@ -89,9 +102,22 @@ export default function BrowseCourses(){
             {programList.map(p=> <option key={p.name} value={p.name}>{p.name}</option>)}
           </select>
         </div>
+        {/* Semester Filter */}
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <label style={{fontWeight:600}}>Filter by Semester:</label>
+          <select
+            disabled={!!(studentProfile && studentProfile.semester) || registrationSubmitted || !selectedProgram}
+            value={selectedSemester || 'none'}
+            onChange={e => setSelectedSemester(e.target.value === 'none' ? '' : e.target.value)}
+            style={{minWidth:120}}
+          >
+            <option value="none">-- Select --</option>
+            {SEMESTERS.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
       </div>
       <div className={styles.grid}>
-        {(programCourses || filtered).map(c => (
+        {filtered.map(c => (
           <CourseCard key={c.id} course={c} onEnroll={()=>enroll(c)} />
         ))}
       </div>
@@ -121,23 +147,33 @@ export default function BrowseCourses(){
         </Modal>
       )}
 
-      {/* Confirmation modal for program selection */}
+      {/* Confirmation modal for program and semester selection */}
       {confirmProgram && (
         <Modal onClose={()=>setConfirmProgram(null)}>
-          <h3>Confirm Program Selection</h3>
-          <p style={{marginTop:8}}>Are you sure you want to choose <strong>{confirmProgram.name}</strong>?</p>
-          <div style={{display:'flex',gap:10,justifyContent:'center',marginTop:16}}>
-            <button className="btn" onClick={()=>{
-              // confirm: filter courses by prefixes and set programCourses
-              const prefixes = confirmProgram.prefixes || []
-              const list = courses.filter(c=> prefixes.some(pf => c.code.toUpperCase().startsWith(pf)))
-              setProgramCourses(list)
-              setSelectedProgram(confirmProgram)
-              // update global student profile's program and persist via AppContext
-              setStudentProfile(prev => ({ ...prev, program: confirmProgram.name }))
-              setConfirmProgram(null)
-            }}>Yes, choose</button>
-            <button className="btn btn-ghost" onClick={()=>{ setConfirmProgram(null); /* keep previous selection */ }}>Cancel</button>
+          <h3>Confirm Program & Semester</h3>
+          <p style={{marginTop:8}}>Are you sure you want to choose <strong>{confirmProgram.name}</strong> for <strong>{selectedSemester || '...'}</strong>?</p>
+          <div style={{display:'flex',flexDirection:'column',gap:10,alignItems:'center',marginTop:16}}>
+            <select
+              value={selectedSemester || 'none'}
+              onChange={e => setSelectedSemester(e.target.value === 'none' ? '' : e.target.value)}
+              style={{minWidth:160,marginBottom:8}}
+            >
+              <option value="none">-- Select Semester --</option>
+              {SEMESTERS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <div style={{display:'flex',gap:10}}>
+              <button className="btn" disabled={!selectedSemester} onClick={()=>{
+                // confirm: filter courses by prefixes and semester, set programCourses
+                const prefixes = confirmProgram.prefixes || []
+                const list = courses.filter(c=> prefixes.some(pf => c.code.toUpperCase().startsWith(pf)) && c.semester === selectedSemester)
+                setProgramCourses(list)
+                setSelectedProgram(confirmProgram)
+                // update global student profile's program and semester and persist via AppContext
+                setStudentProfile(prev => ({ ...prev, program: confirmProgram.name, semester: selectedSemester }))
+                setConfirmProgram(null)
+              }}>Yes, choose</button>
+              <button className="btn btn-ghost" onClick={()=>{ setConfirmProgram(null); /* keep previous selection */ }}>Cancel</button>
+            </div>
           </div>
         </Modal>
       )}

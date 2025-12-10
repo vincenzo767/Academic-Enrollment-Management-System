@@ -52,7 +52,11 @@ programDefs.forEach((p) => {
     const instructor = instructors[i % instructors.length]
     const units = [2,3,3,4][i % 4]
     const available = `${Math.max(5, 30 - (i % 30))}/40`
-    courses.push({ id: idCounter++, program: p.name, code, title, subtitle, schedule, instructor, units, available, conflict:false, enrolled:false })
+    let semester = '';
+    if(i < 20) semester = '1st Semester';
+    else if(i < 40) semester = '2nd Semester';
+    else semester = 'Summer';
+    courses.push({ id: idCounter++, program: p.name, code, title, subtitle, schedule, instructor, units, available, semester, conflict:false, enrolled:false })
   }
 })
 

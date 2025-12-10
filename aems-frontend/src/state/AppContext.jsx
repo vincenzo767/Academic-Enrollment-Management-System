@@ -141,27 +141,21 @@ export function AppProvider({children}){
   }
   
   // Student profile state
-  const loadProfile = () => {
-    try {
-      const raw = localStorage.getItem('studentProfile')
-      if(raw) return JSON.parse(raw)
-    } catch(e) { /* ignore */ }
-    return {
-      fullName: '',
-      schoolId: '',
-      studentId: '',
-      email: '',
-      phone: '',
-      yearLevel: '',
-      semester: '',
-      program: '',
-      enrollmentStatus: '',
-      profilePicture: null,
-      joinDate: ''
-    }
-  }
+  const getEmptyProfile = () => ({
+    fullName: '',
+    schoolId: '',
+    studentId: '',
+    email: '',
+    phone: '',
+    yearLevel: '',
+    semester: '',
+    program: '',
+    enrollmentStatus: '',
+    profilePicture: null,
+    joinDate: ''
+  })
 
-  const [studentProfile, setStudentProfile] = useState(loadProfile)
+  const [studentProfile, setStudentProfile] = useState(getEmptyProfile)
   const [dataRestored, setDataRestored] = useState(false) // flag to show restoration notification only once
   const [registrationSubmitted, setRegistrationSubmitted] = useState(false) // flag for registration submission status
 
@@ -171,6 +165,20 @@ export function AppProvider({children}){
       const userId = studentProfile.studentId || studentProfile.schoolId
       if (userId) {
         try {
+          // Check if this is a different user
+          const previousUserId = storageManager.getCurrentUser()
+          const isDifferentUser = previousUserId && previousUserId !== String(userId)
+          
+          if (isDifferentUser) {
+            // Clear old user's data before switching
+            console.log('[AppContext] Switching users from', previousUserId, 'to', userId)
+            setReservedIds([])
+            setEnrolledIds([])
+            setDepartment('All')
+            setRegistrationSubmitted(false)
+            setDataRestored(false)
+          }
+          
           storageManager.setCurrentUser(userId)
           
           // Check if storage is available
@@ -188,6 +196,15 @@ export function AppProvider({children}){
   useEffect(() => {
     if (role === 'student' && storageManager.getCurrentUser() && !dataRestored) {
       try {
+        // Restore student profile
+        const storedProfile = storageManager.get('studentProfile', null)
+        if (storedProfile && storedProfile.studentId) {
+          setStudentProfile(prev => ({
+            ...prev,
+            ...storedProfile
+          }))
+        }
+        
         // Restore reserved and enrolled courses
         const storedReserved = storageManager.get('reservedIds', [])
         const storedEnrolled = storageManager.get('enrolledIds', [])
@@ -196,6 +213,8 @@ export function AppProvider({children}){
         
         if (storedReserved.length > 0) {
           setReservedIds(storedReserved)
+        } else {
+          setReservedIds([])
         }
         if (storedEnrolled.length > 0) {
           setEnrolledIds(storedEnrolled)
@@ -204,6 +223,8 @@ export function AppProvider({children}){
           if (sid) {
             syncEnrollmentsToBackend(storedEnrolled, sid)
           }
+        } else {
+          setEnrolledIds([])
         }
         if (storedDepartment) {
           setDepartment(storedDepartment)
@@ -267,14 +288,16 @@ export function AppProvider({children}){
     }
   }, [registrationSubmitted, role])
 
-  // persist studentProfile to localStorage whenever it changes
+  // persist studentProfile to user-specific storage whenever it changes
   useEffect(() => {
-    try {
-      localStorage.setItem('studentProfile', JSON.stringify(studentProfile))
-    } catch (e) {
-      console.error('Could not persist studentProfile', e)
+    if (role === 'student' && storageManager.getCurrentUser()) {
+      try {
+        storageManager.save('studentProfile', studentProfile)
+      } catch (e) {
+        console.error('Could not persist studentProfile', e)
+      }
     }
-  }, [studentProfile])
+  }, [studentProfile, role])
 
   // helper: push a snapshot of the current student state to a shared localStorage bucket so the faculty dashboard can reflect changes immediately
   const syncFacultyDashboard = (overrides = {}) => {
@@ -605,11 +628,12 @@ export function AppProvider({children}){
     
     // Reset user state
     setRole(null)
-    setStudentProfile(loadProfile())
+    setStudentProfile(getEmptyProfile())
     setReservedIds([])
     setEnrolledIds([])
     setDepartment('All')
     setDataRestored(false)
+    setRegistrationSubmitted(false)
   }
 
   // Get debug info about storage

@@ -10,8 +10,10 @@ export default function Dashboard() {
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showChangeProgram, setShowChangeProgram] = useState(false)
   const [pendingProgram, setPendingProgram] = useState(null)
+  const [pendingSemester, setPendingSemester] = useState('')
   const [showConfirmChange, setShowConfirmChange] = useState(false)
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
+  const SEMESTERS = ['1st Semester', '2nd Semester', 'Summer']
 
   // Sync enrollments to backend on mount
   useEffect(() => {
@@ -263,7 +265,7 @@ export default function Dashboard() {
               <h3 style={{marginTop:0, color:'var(--text)'}}>Programs</h3>
               <div className={styles.changeProgramList}>
                 {programList.map(p => (
-                  <div key={p.name} className={styles.changeProgramItem} onClick={()=>setPendingProgram(p)}>
+                  <div key={p.name} className={styles.changeProgramItem} onClick={()=>{setPendingProgram(p); setPendingSemester('')}}>
                     <div className={styles.changeProgramItemText}>{p.name}</div>
                   </div>
                 ))}
@@ -273,18 +275,26 @@ export default function Dashboard() {
               <h3 style={{marginTop:0, color:'var(--text)'}}>Selection</h3>
               <div style={{minHeight:120,display:'flex',flexDirection:'column',justifyContent:'center',padding:12,border:'1px solid var(--border)',borderRadius:6,background:'var(--bg)',color:'var(--text)'}}>
                 {pendingProgram ? (
-                  <div>
+                  <>
                     <div style={{fontWeight:700,marginBottom:6,color:'var(--text)'}}>{pendingProgram.name}</div>
                     <div style={{color:'var(--text-secondary)'}}>Prefixes: {pendingProgram.prefixes.join(', ')}</div>
-                  </div>
+                  </>
                 ) : (
                   <div style={{color:'var(--text-secondary)'}}>Select a program from the left to preview and confirm.</div>
                 )}
+                {/* Always show semester dropdown below program selection */}
+                <div style={{marginTop:16}}>
+                  <label style={{fontWeight:600,marginRight:8}}>Select Semester:</label>
+                  <select value={pendingSemester || 'none'} onChange={e=>setPendingSemester(e.target.value === 'none' ? '' : e.target.value)} style={{minWidth:120}}>
+                    <option value="none">-- Select Semester --</option>
+                    {SEMESTERS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
               </div>
 
               <div className={styles.changeProgramActions}>
-                <button className="btn btn-ghost" onClick={()=>{ setShowChangeProgram(false); setPendingProgram(null) }}>Cancel</button>
-                <button className="btn" disabled={!pendingProgram} onClick={()=>{ if(!pendingProgram) return; setShowConfirmChange(true) }}>Confirm Change</button>
+                <button className="btn btn-ghost" onClick={()=>{ setShowChangeProgram(false); setPendingProgram(null); setPendingSemester('') }}>Cancel</button>
+                <button className="btn" disabled={!pendingProgram || !pendingSemester} onClick={()=>{ if(!pendingProgram || !pendingSemester) return; setShowConfirmChange(true) }}>Confirm Change</button>
               </div>
             </div>
           </div>
@@ -293,18 +303,16 @@ export default function Dashboard() {
 
       {showConfirmChange && pendingProgram && (
         <Modal onClose={()=>setShowConfirmChange(false)}>
-          <h3>Confirm Program Change</h3>
-          <p style={{marginTop:8}}>Are you sure you want to change your program to <strong>{pendingProgram.name}</strong>? This will replace your current program.</p>
+          <h3>Confirm Program & Semester Change</h3>
+          <p style={{marginTop:8}}>Are you sure you want to change your program to <strong>{pendingProgram.name}</strong> and semester to <strong>{pendingSemester}</strong>? This will replace your current program and semester.</p>
           <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
             <button className="btn btn-ghost" onClick={()=>setShowConfirmChange(false)}>Cancel</button>
             <button className={"btn"} onClick={()=>{
-              console.log('[Dashboard] Confirming program change, pendingProgram=', pendingProgram)
-              setStudentProfile(prev => ({ ...prev, program: pendingProgram.name }))
-              console.log('[Dashboard] setStudentProfile called')
+              setStudentProfile(prev => ({ ...prev, program: pendingProgram.name, semester: pendingSemester }))
               setShowConfirmChange(false)
               setShowChangeProgram(false)
               setPendingProgram(null)
-              console.log('[Dashboard] closed modals')
+              setPendingSemester('')
             }}>Confirm Change</button>
           </div>
         </Modal>

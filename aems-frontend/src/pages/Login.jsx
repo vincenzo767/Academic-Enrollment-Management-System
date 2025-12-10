@@ -12,7 +12,7 @@ export default function Login(){
   const [showResetModal, setShowResetModal] = useState(false)
   const navigate = useNavigate()
 
-  const { setRole, setStudentProfile } = useApp()
+  const { setRole, setStudentProfile, logout } = useApp()
 
   async function submit(e){
     e.preventDefault()
@@ -25,16 +25,25 @@ export default function Login(){
         return alert('Login failed')
       }
       const data = await res.json()
+      
+      // Clear any existing user data before setting new user
+      logout()
+      
+      // Set new user data
       setRole('student')
-      setStudentProfile(prev => ({
-        ...prev,
-        studentId: data.studentId || data.id || prev.studentId,
-        schoolId: data.schoolId || data.studentId || data.id || prev.schoolId,
-        fullName: `${data.firstname || ''} ${data.lastname || ''}`.trim() || prev.fullName,
-        email: data.email || prev.email,
-        phone: data.phone || prev.phone,
-        program: data.program || prev.program
-      }))
+      setStudentProfile({
+        studentId: data.studentId || data.id || '',
+        schoolId: data.schoolId || data.studentId || data.id || '',
+        fullName: `${data.firstname || ''} ${data.lastname || ''}`.trim() || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        program: data.program || '',
+        yearLevel: '',
+        semester: '',
+        enrollmentStatus: 'Active',
+        profilePicture: null,
+        joinDate: new Date().toISOString().split('T')[0]
+      })
       navigate('/portal')
     } catch(e){
       console.error(e)
