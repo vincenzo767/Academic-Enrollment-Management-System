@@ -12,6 +12,13 @@
   max-width:1100px;
   text-align:center;
 }
+.logo{
+  width:250px;
+  height:250px;
+  margin:0 auto 20px;
+  display:block;
+  object-fit:contain;
+}
 .title{
   font-size:40px;
   line-height:1.05;

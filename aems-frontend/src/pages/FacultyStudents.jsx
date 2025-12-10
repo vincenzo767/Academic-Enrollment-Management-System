@@ -277,7 +277,7 @@ export default function FacultyStudents(){
       {/* Modal / Drawer for detail view */}
       {selectedStudent && (
         <div style={{position:'fixed',left:0,top:0,right:0,bottom:0,background:'rgba(0,0,0,0.35)',display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setSelectedStudent(null)}>
-          <div style={{background:'white',padding:20,borderRadius:8,minWidth:520,maxHeight:'80vh',overflow:'auto'}} onClick={(e)=>e.stopPropagation()}>
+          <div style={{background:'var(--card)',color:'var(--text)',padding:20,borderRadius:8,minWidth:520,maxHeight:'80vh',overflow:'auto'}} onClick={(e)=>e.stopPropagation()}>
             <h3>{(selectedStudent.student.firstname || '') + ' ' + (selectedStudent.student.lastname || '')}</h3>
             <p><strong>Student ID:</strong> {selectedStudent.student.studentId}</p>
             <p><strong>Email:</strong> {selectedStudent.student.email || '-'}</p>

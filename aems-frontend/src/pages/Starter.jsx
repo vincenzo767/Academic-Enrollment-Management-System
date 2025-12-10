@@ -7,6 +7,7 @@ export default function Starter(){
   return (
     <div className={styles.hero}>
       <div className={styles.inner}>
+        <img src="/assets/aems-logo.png" alt="AEMS Logo" className={styles.logo} />
         <h1 className={styles.title}>AEMS: Academic Enrollment<br/>Management System</h1>
         <p className={styles.lead}>Discover how AEMS transforms your school's enrollment process using smart automation, organized workflows, and an easy-to-use interface designed for both students and administrators.</p>
         <div className={styles.buttonGroup}>

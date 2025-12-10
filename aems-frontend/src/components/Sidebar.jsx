@@ -14,44 +14,42 @@ export default function Sidebar({ userInfo, navLinks, onLogout, portalType = 'st
 
   return (
     <aside className={`${styles.sidebar} ${!isExpanded ? styles.collapsed : ''}`}>
-      {/* Toggle Button */}
-      <button
-        className={styles.toggleBtn}
-        onClick={toggleSidebar}
-        title={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
-        aria-label="Toggle sidebar"
-      >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <div className={styles.topBar}>
+        <img src="/assets/aems-logo.png" alt="AEMS Logo" className={styles.logo} />
+        <button
+          className={styles.toggleBtn}
+          onClick={toggleSidebar}
+          title={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+          aria-label="Toggle sidebar"
         >
-          {isExpanded ? (
-            <>
-              <polyline points="15 18 9 12 15 6"></polyline>
-              <line x1="6" y1="4" x2="6" y2="20"></line>
-            </>
-          ) : (
-            <>
-              <polyline points="9 18 15 12 9 6"></polyline>
-              <line x1="18" y1="4" x2="18" y2="20"></line>
-            </>
-          )}
-        </svg>
-      </button>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {isExpanded ? (
+              <>
+                <polyline points="15 18 9 12 15 6"></polyline>
+                <line x1="6" y1="4" x2="6" y2="20"></line>
+              </>
+            ) : (
+              <>
+                <polyline points="9 18 15 12 9 6"></polyline>
+                <line x1="18" y1="4" x2="18" y2="20"></line>
+              </>
+            )}
+          </svg>
+        </button>
+      </div>
 
       {/* Profile Section */}
       {isExpanded && (
         <div className={styles.profileBox}>
-          <UserAvatar
-            name={userInfo?.name || 'User'}
-            id={userInfo?.id || ''}
-          />
           <div className={styles.userInfo}>
             <p className={styles.userName}>{userInfo?.name || 'User'}</p>
             <p className={styles.userRole}>{userInfo?.role || portalType}</p>
