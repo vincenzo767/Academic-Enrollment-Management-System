@@ -198,7 +198,7 @@ export default function Register(){
                 onClick={() => handleRoleSelect('Educator')}
               >
                 <div className={registerStyles.roleIcon}>👨‍🏫</div>
-                Educator
+                EPO Staff
               </button>
             </div>
           </div>

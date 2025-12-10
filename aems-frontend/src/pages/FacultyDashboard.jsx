@@ -402,22 +402,24 @@ export default function FacultyDashboard() {
       setFacultyProfile(updatedProfile)
 
       // Attempt to persist to backend
-      if (facultyProfile.facultyId) {
-        await axiosInstance.put(`/faculty/${facultyProfile.facultyId}`, {
-          firstName: editFormData.firstName,
-          lastName: editFormData.lastName,
-          email: editFormData.email,
-          phone: editFormData.phone,
-          department: editFormData.department,
-          officeLocation: editFormData.officeLocation,
-          officeHours: editFormData.officeHours,
-          currentSemester: selectedSemester
-        })
-      }
+      const userId = facultyProfile.facultyId || facultyProfile.userId || 1
+      await axiosInstance.put(`/user/${userId}`, {
+        firstname: editFormData.firstName,
+        lastname: editFormData.lastName,
+        email: editFormData.email,
+        phone: editFormData.phone,
+        department: editFormData.department,
+        officeLocation: editFormData.officeLocation,
+        officeHours: editFormData.officeHours,
+        currentSemester: selectedSemester
+      })
 
       setShowEditProfile(false)
+      alert('Profile updated successfully!')
     } catch (e) {
       console.error('Failed to update profile:', e)
+      // Still close the modal since local update succeeded
+      setShowEditProfile(false)
       alert('Profile updated locally but could not sync with server')
     }
   }

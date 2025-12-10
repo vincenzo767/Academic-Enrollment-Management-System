@@ -30,9 +30,34 @@ public class UserService {
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-            user.setFirstname(userDetails.getFirstname());
-            user.setLastname(userDetails.getLastname());
-            user.setRole(userDetails.getRole());
+            // Only update fields that are explicitly provided (non-null)
+            if (userDetails.getFirstname() != null) {
+                user.setFirstname(userDetails.getFirstname());
+            }
+            if (userDetails.getLastname() != null) {
+                user.setLastname(userDetails.getLastname());
+            }
+            if (userDetails.getRole() != null) {
+                user.setRole(userDetails.getRole());
+            }
+            if (userDetails.getEmail() != null) {
+                user.setEmail(userDetails.getEmail());
+            }
+            if (userDetails.getPhone() != null) {
+                user.setPhone(userDetails.getPhone());
+            }
+            if (userDetails.getDepartment() != null) {
+                user.setDepartment(userDetails.getDepartment());
+            }
+            if (userDetails.getOfficeLocation() != null) {
+                user.setOfficeLocation(userDetails.getOfficeLocation());
+            }
+            if (userDetails.getOfficeHours() != null) {
+                user.setOfficeHours(userDetails.getOfficeHours());
+            }
+            if (userDetails.getCurrentSemester() != null) {
+                user.setCurrentSemester(userDetails.getCurrentSemester());
+            }
             return userRepository.save(user);
         }
         return null;

@@ -79,7 +79,7 @@ export default function Login(){
                   Click Here
                 </button>
               </div>
-              <div className={styles.facultyNote}>Faculty member? Sign in here <Link to="/faculty-login">Faculty Sign-in</Link></div>
+              <div className={styles.facultyNote}>Faculty member? Sign in here <Link to="/faculty-login">EPO Staff</Link></div>
             </form>
           </div>
         </div>

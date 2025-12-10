@@ -27,6 +27,13 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    // Faculty-specific fields
+    private String phone;
+    private String department;
+    private String officeLocation;
+    private String officeHours;
+    private String currentSemester;
+
     // Getters
     public Long getUid() {
         return userId;
@@ -50,6 +57,26 @@ public class User {
 
     public String getPassword() {
         return password;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public String getOfficeLocation() {
+        return officeLocation;
+    }
+
+    public String getOfficeHours() {
+        return officeHours;
+    }
+
+    public String getCurrentSemester() {
+        return currentSemester;
     }
 
 
@@ -76,5 +103,25 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public void setOfficeLocation(String officeLocation) {
+        this.officeLocation = officeLocation;
+    }
+
+    public void setOfficeHours(String officeHours) {
+        this.officeHours = officeHours;
+    }
+
+    public void setCurrentSemester(String currentSemester) {
+        this.currentSemester = currentSemester;
     }
 }

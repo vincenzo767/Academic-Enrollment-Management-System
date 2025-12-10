@@ -43,7 +43,7 @@ export default function FacultyLogin(){
             <form onSubmit={submit} className={styles.card}>
               <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Enter email" />
               <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter Password" />
-              <button type="submit">Faculty Login</button>
+              <button type="submit">EPO Staff Login</button>
               <div className={styles.links}>
                 <button type="button" onClick={() => setShowForgotModal(true)} className={styles.linkButton}>
                   Forgot Password?
