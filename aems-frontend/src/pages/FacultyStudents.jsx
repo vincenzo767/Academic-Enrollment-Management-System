@@ -58,6 +58,22 @@ export default function FacultyStudents(){
     }
   }
 
+  // Clean up duplicate enrollments from database
+  const cleanupDuplicateEnrollments = async () => {
+    if (!window.confirm('This will remove duplicate course enrollments. Are you sure?')) return
+    try {
+      const res = await fetch('/api/enrollments/cleanup-duplicates', { method: 'POST' })
+      const data = await res.json()
+      if (data.success) {
+        alert(`Cleanup complete! Removed ${data.duplicatesRemoved} duplicate enrollments.`)
+        // Refresh the data
+        fetchData(new AbortController().signal)
+      }
+    } catch (e) {
+      alert('Cleanup failed: ' + e.message)
+    }
+  }
+
   useEffect(()=>{
     const controller = new AbortController()
     fetchData(controller.signal)
@@ -135,6 +151,7 @@ export default function FacultyStudents(){
     courses.forEach(c => {
       courseMap.set(c.courseId, { 
         id: c.courseId,
+        code: c.courseCode || c.code,
         title: c.title || c.name || `Course ${c.courseId}`,
         schedule: c.schedule || 'TBA'
       })
@@ -143,19 +160,26 @@ export default function FacultyStudents(){
     const map = new Map()
     students.forEach(s => {
       const sid = String(s.studentId)
-      map.set(sid, { student: s, enrolledCount: 0, enrolledCourses: [] })
+      map.set(sid, { student: s, enrolledCount: 0, enrolledCourses: [], courseIds: new Set() })
     })
 
-    // accumulate enrollments
+    // accumulate enrollments - count active enrollments (exclude dropped/cancelled) and deduplicate by course code/ID
     enrollments.forEach(e => {
       const sid = String(e.studentId)
-      const entry = map.get(sid) || { student: { studentId: e.studentId }, enrolledCount: 0, enrolledCourses: [] }
-      // Count all enrollments that are not explicitly dropped or cancelled
+      const entry = map.get(sid) || { student: { studentId: e.studentId }, enrolledCount: 0, enrolledCourses: [], courseIds: new Set() }
+      
+      // Count all enrollments except dropped and cancelled
       const statusLower = (e.status || '').toLowerCase()
-      if(statusLower && statusLower !== 'dropped' && statusLower !== 'cancelled') {
-        entry.enrolledCount = (entry.enrolledCount || 0) + 1
-        const courseInfo = courseMap.get(e.courseId) || { id: e.courseId, title: `Course ${e.courseId}`, schedule: 'TBA' }
-        entry.enrolledCourses.push(courseInfo)
+      if(statusLower !== 'dropped' && statusLower !== 'cancelled') {
+        const courseId = e.courseId
+        const courseInfo = courseMap.get(courseId) || { id: courseId, title: `Course ${courseId}`, schedule: 'TBA' }
+        // dedupe using course code if available, otherwise courseId
+        const dedupeKey = courseInfo.code || courseInfo.id
+        if(!entry.courseIds.has(dedupeKey)) {
+          entry.enrolledCount = (entry.enrolledCount || 0) + 1
+          entry.enrolledCourses.push(courseInfo)
+          entry.courseIds.add(dedupeKey)
+        }
       }
       map.set(sid, entry)
     })
@@ -222,6 +246,7 @@ export default function FacultyStudents(){
             <div style={{fontSize:32,fontWeight:700}}>{statistics.studentsWithEnrollments}</div>
           </div>
           <button onClick={()=>fetchData(new AbortController().signal)} style={{padding:'16px',background:'var(--accent-2)',color:'white',border:'none',borderRadius:8,cursor:'pointer',fontWeight:600}}>🔄 Refresh Data</button>
+          <button onClick={cleanupDuplicateEnrollments} style={{padding:'16px',background:'#ef4444',color:'white',border:'none',borderRadius:8,cursor:'pointer',fontWeight:600}}>🧹 Cleanup Duplicates</button>
         </div>
       </div>
 

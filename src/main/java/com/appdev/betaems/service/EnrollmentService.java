@@ -12,6 +12,7 @@ public interface EnrollmentService {
     void deleteEnrollment(Long id);
     Enrollment getEnrollmentById(Long id);
     List<Enrollment> getAllEnrollments();
+    List<Enrollment> getEnrollmentsByStudentId(Long studentId);
     
     /**
      * Enrolls a student in a course with atomic slot decrement

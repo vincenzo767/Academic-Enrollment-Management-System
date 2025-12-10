@@ -35,8 +35,18 @@ public class StatisticsController {
     public Map<String, Object> getFacultyStatistics(@RequestParam(required = false) String semester) {
         Map<String, Object> stats = new HashMap<>();
         
-        // Total Courses
-        long totalCourses = coursesRepository.count();
+        // Get all courses
+        List<Courses> allCourses = coursesRepository.findAll();
+        
+        // Filter courses by semester if provided
+        if (semester != null && !semester.equals("All")) {
+            allCourses = allCourses.stream()
+                .filter(c -> semester.equals(c.getSemester()))
+                .toList();
+        }
+        
+        // Total Courses (filtered by semester)
+        long totalCourses = allCourses.size();
         stats.put("totalCourses", totalCourses);
         
         // Get enrollments (filtered by semester if provided)
@@ -58,8 +68,7 @@ public class StatisticsController {
         long totalEnrollments = allEnrollments.size();
         stats.put("totalEnrollments", totalEnrollments);
         
-        // Capacity Used Calculation
-        List<Courses> allCourses = coursesRepository.findAll();
+        // Capacity Used Calculation (using filtered courses)
         int totalCapacity = allCourses.stream()
             .mapToInt(c -> c.getTotalCapacity() != null ? c.getTotalCapacity() : 30)
             .sum();
@@ -186,6 +195,12 @@ public class StatisticsController {
         }
         
         List<Courses> courses = coursesRepository.findAll();
+        // Filter courses by semester if specified
+        if (semester != null && !semester.equals("All")) {
+            courses = courses.stream()
+                .filter(c -> semester.equals(c.getSemester()))
+                .toList();
+        }
         
         List<String> courseNames = new ArrayList<>();
         List<Integer> capacities = new ArrayList<>();

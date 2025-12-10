@@ -204,10 +204,17 @@ export default function FacultyDashboard() {
         const records = students.slice(0, 10).map(s => {
           const enrs = studentEnrollmentMap.get(s.studentId) || []
           const normalized = enrs.map(e => (e.status || '').toLowerCase())
-          const courseCount = enrs.filter(e => {
+          // Count all enrollments except dropped and cancelled, deduping by course code/id
+          const dedupSet = new Set()
+          enrs.forEach(e => {
             const status = (e.status || '').toLowerCase()
-            return status !== 'dropped' && status !== 'cancelled'
-          }).length
+            if(status === 'dropped' || status === 'cancelled') return
+            // find course code for better dedupe if available
+            const course = courses.find(c => c.courseId === e.courseId || String(c.courseId) === String(e.courseId))
+            const key = (course && (course.courseCode || course.code)) || e.courseId
+            dedupSet.add(key)
+          })
+          const courseCount = dedupSet.size
           const hasRegistered = normalized.some(st => st === 'registered' || st === 'enrolled' || st === 'approved' || st === 'submitted')
           const status = hasRegistered ? 'Registered' : 'Pending'
           const latestEnrollment = enrs.length > 0 ? enrs[0] : null
@@ -254,15 +261,22 @@ export default function FacultyDashboard() {
         const mergedStats = computeStats(mergeWithLocalOverrides(records, overrides))
         setEnrollmentStats({ ...mergedStats, totalStudents: uniqueStudents || mergedStats.totalStudents })
 
-        // Create activity feed from recent enrollments
-        const recentEnrollments = enrollments.slice(0, 6).map((e, idx) => {
+        // Create activity feed from recent enrollments (sorted by date, most recent first)
+        const sortedEnrollments = [...enrollments].sort((a, b) => {
+          const dateA = new Date(a.enrollmentDate || 0).getTime()
+          const dateB = new Date(b.enrollmentDate || 0).getTime()
+          return dateB - dateA
+        })
+        
+        // Filter for recent enrollments (last 10 records by date)
+        const recentEnrollments = sortedEnrollments.slice(0, 10).map((e, idx) => {
           const student = students.find(s => s.studentId === e.studentId)
           const studentName = student ? `${student.firstname} ${student.lastname}` : `Student ${e.studentId}`
-          const action = e.status || 'unknown'
+          const action = (e.status || '').toLowerCase()
           return {
             id: e.enrollmentId || idx,
-            type: action === 'enrolled' ? 'success' : 'info',
-            text: `${action === 'enrolled' ? 'Approved' : 'Requested'} enrollment for ${studentName}`,
+            type: action === 'enrolled' || action === 'enrolled' ? 'success' : 'info',
+            text: `${action === 'enrolled' || action === 'approved' ? 'Approved' : 'Requested'} enrollment for ${studentName}`,
             time: e.enrollmentDate || 'just now'
           }
         })

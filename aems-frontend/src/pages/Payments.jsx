@@ -80,12 +80,12 @@ export default function Payments(){
       <div className={styles.summary}>
         <div>
           <div className={styles.kpiLabel}>Total Due (selected)</div>
-          <div className={styles.kpiValue}>${billing.total.toLocaleString()}</div>
-          <div className={styles.kpiSub}>{billing.units} units selected • ${billing.perUnit}/unit</div>
+          <div className={styles.kpiValue}>₱{billing.total.toLocaleString()}</div>
+          <div className={styles.kpiSub}>{billing.units} units selected • ₱{billing.perUnit}/unit</div>
         </div>
         <div>
           <div className={styles.kpiLabel}>Paid this year</div>
-          <div className={styles.kpiValue}>${paymentSummary.paidThisYear.toLocaleString()}</div>
+          <div className={styles.kpiValue}>₱{paymentSummary.paidThisYear.toLocaleString()}</div>
           <div className={styles.kpiSub}>Completed payments</div>
         </div>
         <div>
@@ -113,7 +113,7 @@ export default function Payments(){
       {showPaymentForm && (
         <form className={styles.paymentForm} onSubmit={handleCreatePayment}>
           <div className={styles.formGroup}>
-            <label>Amount ($)</label>
+            <label>Amount (₱)</label>
             <input
               type="number"
               step="0.01"
@@ -166,7 +166,7 @@ export default function Payments(){
             payments.map(p => (
               <div key={p.paymentId} className={styles.row}>
                 <div>{p.description || 'Payment'}</div>
-                <div>${Number(p.amount || 0).toFixed(2)}</div>
+                <div>₱{Number(p.amount || 0).toFixed(2)}</div>
                 <div>{p.paymentDate || 'N/A'}</div>
                 <div>{p.paymentMethod?.replace('_', ' ') || 'N/A'}</div>
                 <div><span className={`${styles.status} ${styles[p.status]}`}>{p.status}</span></div>

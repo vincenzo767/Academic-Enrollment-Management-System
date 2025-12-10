@@ -21,6 +21,7 @@ public class Courses {
     private Long instructorId;
     private Integer totalCapacity;
     private Integer availableSlots;
+    private String semester; // 1st Semester, 2nd Semester, Summer
 
     public Courses() {}
 
@@ -65,4 +66,7 @@ public class Courses {
 
     public Integer getAvailableSlots() { return availableSlots; }
     public void setAvailableSlots(Integer availableSlots) { this.availableSlots = availableSlots; }
+
+    public String getSemester() { return semester; }
+    public void setSemester(String semester) { this.semester = semester; }
 }

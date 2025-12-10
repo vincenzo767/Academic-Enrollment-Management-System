@@ -63,6 +63,11 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return enrollmentRepository.findAll();
     }
 
+    @Override
+    public List<Enrollment> getEnrollmentsByStudentId(Long studentId) {
+        return enrollmentRepository.findByStudentId(studentId);
+    }
+
     /**
      * Atomically enrolls a student in a course and decrements available slots
      * Uses @Transactional to ensure data integrity and prevent race conditions
@@ -113,6 +118,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             enrollment.setCourseId(courseId);
             enrollment.setEnrollmentDate(LocalDate.now());
             enrollment.setStatus("ENROLLED");
+            enrollment.setSemester(course.getSemester()); // Set semester from course
             
             Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
             
