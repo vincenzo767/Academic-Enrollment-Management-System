@@ -1,10 +1,12 @@
 package com.appdev.betaems.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import com.appdev.betaems.entity.Payment;
 import com.appdev.betaems.repository.PaymentRepository;
-import java.util.List;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -25,6 +27,8 @@ public class PaymentServiceImpl implements PaymentService {
         existing.setPaymentMethod(payment.getPaymentMethod());
         existing.setStatus(payment.getStatus());
         existing.setEnrollmentId(payment.getEnrollmentId());
+        existing.setStudentId(payment.getStudentId());
+        existing.setDescription(payment.getDescription());
         return paymentRepository.save(existing);
     }
 
@@ -41,6 +45,16 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
+    }
+
+    @Override
+    public List<Payment> getPaymentsByStudentId(Long studentId) {
+        return paymentRepository.findByStudentId(studentId);
+    }
+
+    @Override
+    public List<Payment> getPaymentsByEnrollmentId(Long enrollmentId) {
+        return paymentRepository.findByEnrollmentId(enrollmentId);
     }
 }
 

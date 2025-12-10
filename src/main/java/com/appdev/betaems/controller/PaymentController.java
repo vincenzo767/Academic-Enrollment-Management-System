@@ -1,13 +1,24 @@
 package com.appdev.betaems.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.appdev.betaems.entity.Payment;
 import com.appdev.betaems.service.PaymentService;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/payments")
+@CrossOrigin(origins = "http://localhost:5173")
 public class PaymentController {
 
     @Autowired
@@ -36,6 +47,16 @@ public class PaymentController {
     @GetMapping
     public List<Payment> getAll() {
         return paymentService.getAllPayments();
+    }
+
+    @GetMapping("/student/{studentId}")
+    public List<Payment> getByStudentId(@PathVariable Long studentId) {
+        return paymentService.getPaymentsByStudentId(studentId);
+    }
+
+    @GetMapping("/enrollment/{enrollmentId}")
+    public List<Payment> getByEnrollmentId(@PathVariable Long enrollmentId) {
+        return paymentService.getPaymentsByEnrollmentId(enrollmentId);
     }
 }
 
