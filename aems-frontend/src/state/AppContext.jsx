@@ -46,6 +46,7 @@ export function AppProvider({children}){
   const [reservedIds, setReservedIds] = useState([])
   const [enrolledIds, setEnrolledIds] = useState([])
   const [notifications, setNotifications] = useState([])
+  const [payments, setPayments] = useState([])
   // role can be 'student' | 'faculty' | 'admin' | null
   const [role, setRole] = useState(null)
   const [storageAvailable, setStorageAvailable] = useState(storageManager.isAvailable)
@@ -449,6 +450,66 @@ export function AppProvider({children}){
     } catch(e){ console.error(e); throw e }
   }
 
+  // CRUD helpers for payments
+  const loadPayments = async (studentId) => {
+    try {
+      const res = await fetch(`/api/payments/student/${studentId}`)
+      if (!res.ok) throw new Error('Failed to load payments')
+      const data = await res.json()
+      setPayments(data)
+      return data
+    } catch (e) {
+      console.error('Error loading payments:', e)
+      return []
+    }
+  }
+
+  const createPayment = async (payment) => {
+    // payment: { studentId, enrollmentId, amount, paymentDate, paymentMethod, status, description }
+    try {
+      const res = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payment)
+      })
+      if (!res.ok) throw new Error('Create payment failed')
+      const created = await res.json()
+      setPayments(prev => [...prev, created])
+      return created
+    } catch (e) {
+      console.error('Error creating payment:', e)
+      throw e
+    }
+  }
+
+  const updatePayment = async (id, payment) => {
+    try {
+      const res = await fetch(`/api/payments/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payment)
+      })
+      if (!res.ok) throw new Error('Update payment failed')
+      const updated = await res.json()
+      setPayments(prev => prev.map(p => p.paymentId === id ? updated : p))
+      return updated
+    } catch (e) {
+      console.error('Error updating payment:', e)
+      throw e
+    }
+  }
+
+  const deletePayment = async (id) => {
+    try {
+      const res = await fetch(`/api/payments/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete payment failed')
+      setPayments(prev => prev.filter(p => p.paymentId !== id))
+    } catch (e) {
+      console.error('Error deleting payment:', e)
+      throw e
+    }
+  }
+
   // Log an audit event (client-side action: enroll, drop, reserve)
   const logAuditEvent = (action, courseId, courseCode, courseTitle, studentId) => {
     const event = {
@@ -672,7 +733,7 @@ export function AppProvider({children}){
     }
   }
 
-  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole, studentProfile, setStudentProfile, logout, storageAvailable, getStorageDebugInfo, auditLog, logAuditEvent, registrationSubmitted, submitRegistration, isDarkMode, toggleDarkMode}
+  const value = {courses, setCourses, department, setDepartment, departments, filteredCourses, reservedIds, toggleReserve, enrolledIds, enrollCourse, dropCourse, notifications, setNotifications, addNotification, markAsRead, markAllRead, billing, role, setRole, studentProfile, setStudentProfile, logout, storageAvailable, getStorageDebugInfo, auditLog, logAuditEvent, registrationSubmitted, submitRegistration, isDarkMode, toggleDarkMode, payments, setPayments, loadPayments, createPayment, updatePayment, deletePayment}
 
   // expose course CRUD helpers
   value.createCourse = createCourse
