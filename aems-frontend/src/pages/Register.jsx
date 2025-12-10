@@ -103,70 +103,82 @@ export default function Register(){
 
   return (
     <div className={styles.hero}>
-      <div className={styles.centerBox}>
-        <form onSubmit={handleRegister} className={styles.card}>
-          <h2 className={registerStyles.title}>Register</h2>
-          
-          {error && <div className={registerStyles.error}>{error}</div>}
-          {success && <div className={registerStyles.success}>{success}</div>}
-          
-          <input 
-            value={fullName} 
-            onChange={e=>setFullName(e.target.value)} 
-            placeholder="Full Name"
-            disabled={loading}
-          />
-          
-          <input 
-            value={schoolId} 
-            onChange={e=>setSchoolId(e.target.value)} 
-            placeholder="School ID"
-            disabled={loading}
-          />
-          
-          <input 
-            value={email} 
-            onChange={e=>setEmail(e.target.value)} 
-            type="email"
-            placeholder="Email address/Institutional address"
-            disabled={loading}
-          />
-          
-          <div className={registerStyles.roleSelect}>
-            <button 
-              type="button"
-              onClick={() => setShowRoleModal(true)}
-              className={registerStyles.roleButton}
-              disabled={loading}
-            >
-              {selectedRole ? `Role: ${selectedRole}` : 'Select Role'}
-            </button>
+      <div className={styles.container}>
+        <div className={styles.leftSection}>
+          <div className={styles.logoContainer}>
+            <img src="/assets/aems-logo.png" alt="AEMS Logo" className={styles.logo} />
           </div>
-          
-          <input 
-            value={password} 
-            onChange={e=>setPassword(e.target.value)} 
-            type="password"
-            placeholder="Enter Password"
-            disabled={loading}
-          />
-          
-          <input 
-            value={confirmPassword} 
-            onChange={e=>setConfirmPassword(e.target.value)} 
-            type="password"
-            placeholder="Confirm Password"
-            disabled={loading}
-          />
-          
-          <button type="submit" disabled={loading}>
-            {loading ? 'Registering...' : 'Complete Registration'}
-          </button>
-          
-          <div className={styles.facultyNote}>
-            Already have an account? <Link to="/login">Sign in</Link>
+          <h1 className={styles.leftTitle}>AEMS: Academic Enrollment Management System</h1>
+          <p className={styles.leftDescription}>
+            Discover how AEMS transforms your school's enrollment process using smart automation, intuitive workflows, and an easy-to-use interface designed for both students and administrators.
+          </p>
+        </div>
+        <div className={styles.rightSection}>
+          <div className={styles.formContainer}>
+            <h2 className={styles.loginTitle}>REGISTER</h2>
+            <form onSubmit={handleRegister} className={styles.card}>
+              {error && <div className={registerStyles.error}>{error}</div>}
+              {success && <div className={registerStyles.success}>{success}</div>}
+              
+              <input 
+                value={fullName} 
+                onChange={e=>setFullName(e.target.value)} 
+                placeholder="Full Name"
+                disabled={loading}
+              />
+              
+              <input 
+                value={schoolId} 
+                onChange={e=>setSchoolId(e.target.value)} 
+                placeholder="School ID"
+                disabled={loading}
+              />
+              
+              <input 
+                value={email} 
+                onChange={e=>setEmail(e.target.value)} 
+                type="email"
+                placeholder="Email address/Institutional address"
+                disabled={loading}
+              />
+              
+              <div className={registerStyles.roleSelect}>
+                <button 
+                  type="button"
+                  onClick={() => setShowRoleModal(true)}
+                  className={registerStyles.roleButton}
+                  disabled={loading}
+                >
+                  {selectedRole ? `Role: ${selectedRole}` : 'Select Role'}
+                </button>
+              </div>
+              
+              <input 
+                value={password} 
+                onChange={e=>setPassword(e.target.value)} 
+                type="password"
+                placeholder="Enter Password"
+                disabled={loading}
+              />
+              
+              <input 
+                value={confirmPassword} 
+                onChange={e=>setConfirmPassword(e.target.value)} 
+                type="password"
+                placeholder="Confirm Password"
+                disabled={loading}
+              />
+              
+              <button type="submit" disabled={loading}>
+                {loading ? 'Registering...' : 'Complete Registration'}
+              </button>
+              
+              <div className={styles.facultyNote}>
+                Already have an account? <Link to="/login">Sign in</Link>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </div>
 
       {showRoleModal && (
