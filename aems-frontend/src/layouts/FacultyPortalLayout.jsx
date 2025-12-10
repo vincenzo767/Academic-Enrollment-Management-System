@@ -19,9 +19,9 @@ export default function FacultyPortalLayout(){
   ]
 
   const userInfo = {
-    name: 'Dr. Sarah Johnson',
+    name: 'EPO Staff',
     id: 'FACULTY-001',
-    role: 'Faculty'
+    role: 'Officer'
   }
 
   return (
