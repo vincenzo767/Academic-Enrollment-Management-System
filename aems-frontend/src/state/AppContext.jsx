@@ -7,6 +7,8 @@ import { notifyDataRestored, notifyDataCleared, notifyStorageUnavailable } from 
 const AppContext = createContext(null)
 const FACULTY_SYNC_KEY = 'aems:facultySync'
 const FACULTY_APPROVALS_KEY = 'aems:facultyApprovals'
+const STUDENT_NOTIFICATIONS_KEY = 'aems:studentNotifications'
+const FACULTY_NOTIFICATIONS_KEY = 'aems:facultyNotifications'
 
 const DAY_MAP = { M: 'Monday', T: 'Tuesday', W: 'Wednesday', Th: 'Thursday', F: 'Friday', Sat: 'Saturday', Sun: 'Sunday' }
 
@@ -536,6 +538,26 @@ export function AppProvider({children}){
   const addNotification = ({text, type = 'info', courseId = null, targetRole = null}) => {
     const n = { id: Date.now() + Math.floor(Math.random()*1000), text, type, courseId, timestamp: new Date().toISOString(), read: false, role: targetRole || role || 'all' }
     setNotifications(prev => [n, ...prev])
+    
+    // Store notifications in portal-specific keys in localStorage for cross-tab/window persistence
+    try {
+      const notifRole = targetRole || role || 'all'
+      // Only store to the specific portal's notification key, not shared
+      if (notifRole === 'student' || notifRole === 'all') {
+        const stored = localStorage.getItem(STUDENT_NOTIFICATIONS_KEY)
+        const notifications = stored ? JSON.parse(stored) : []
+        const updated = [n, ...notifications].slice(0, 50) // Keep last 50
+        localStorage.setItem(STUDENT_NOTIFICATIONS_KEY, JSON.stringify(updated))
+      }
+      if (notifRole === 'faculty' || notifRole === 'all') {
+        const stored = localStorage.getItem(FACULTY_NOTIFICATIONS_KEY)
+        const notifications = stored ? JSON.parse(stored) : []
+        const updated = [n, ...notifications].slice(0, 50) // Keep last 50
+        localStorage.setItem(FACULTY_NOTIFICATIONS_KEY, JSON.stringify(updated))
+      }
+    } catch (e) {
+      console.error('Failed to persist notification', e)
+    }
   }
 
   useEffect(()=>{

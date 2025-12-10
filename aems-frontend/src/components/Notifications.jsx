@@ -1,12 +1,38 @@
 import React, { useState } from 'react'
 import { useApp } from '../state/AppContext.js'
 
+const STUDENT_NOTIFICATIONS_KEY = 'aems:studentNotifications'
+const FACULTY_NOTIFICATIONS_KEY = 'aems:facultyNotifications'
+
 export default function Notifications(){
   const { notifications = [], markAsRead, markAllRead, role } = useApp()
   const [open, setOpen] = useState(false)
 
-  // only show notifications relevant to current role (or 'all')
-  const visible = notifications.filter(n => !n.role || n.role === 'all' || (role && n.role === role))
+  // Get portal-specific notifications from localStorage
+  const getPortalNotifications = () => {
+    if (role === 'student') {
+      try {
+        const stored = localStorage.getItem(STUDENT_NOTIFICATIONS_KEY)
+        return stored ? JSON.parse(stored) : []
+      } catch (e) {
+        console.error('Failed to load student notifications:', e)
+        return []
+      }
+    } else if (role === 'faculty') {
+      try {
+        const stored = localStorage.getItem(FACULTY_NOTIFICATIONS_KEY)
+        return stored ? JSON.parse(stored) : []
+      } catch (e) {
+        console.error('Failed to load faculty notifications:', e)
+        return []
+      }
+    }
+    return []
+  }
+
+  // Use portal-specific notifications from localStorage, with memory state as fallback
+  const portalNotifications = getPortalNotifications()
+  const visible = portalNotifications.length > 0 ? portalNotifications : notifications.filter(n => !n.role || n.role === 'all' || (role && n.role === role))
   const unread = visible.filter(n=> !n.read)
 
   return (

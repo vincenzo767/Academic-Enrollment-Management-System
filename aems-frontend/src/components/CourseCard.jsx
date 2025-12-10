@@ -3,8 +3,7 @@ import { useApp } from '../state/AppContext.js'
 import styles from '../styles/coursecard.module.css'
 
 export default function CourseCard({course, onEnroll}){
-  const {reservedIds, toggleReserve, enrolledIds, studentProfile} = useApp()
-  const reserved = reservedIds.includes(course.id)
+  const {enrolledIds, studentProfile} = useApp()
   const enrolled = enrolledIds.includes(course.id) || course.enrolled
   // Only allow enroll if course.semester matches student's chosen semester (if set)
   const semesterLocked = studentProfile && studentProfile.semester
@@ -38,9 +37,6 @@ export default function CourseCard({course, onEnroll}){
             title={semesterMismatch ? `You can only enroll in courses for ${studentProfile.semester}` : ''}
           >
             {course.conflict ? 'Enroll Anyway' : 'Enroll'}
-          </button>
-          <button className={reserved ? 'btn-outline active' : 'btn-outline'} onClick={()=>toggleReserve(course.id)}>
-            {reserved ? 'Reserved' : 'Reserve'}
           </button>
         </div>
       </div>

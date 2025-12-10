@@ -74,7 +74,7 @@ export default function BrowseCourses(){
     if(selectedSemester) {
       list = list.filter(c=> c.semester === selectedSemester)
     }
-    if(q) list = list.filter(c=> c.code.toLowerCase().includes(q) || c.title.toLowerCase().includes(q) || c.instructor.toLowerCase().includes(q))
+    if(q) list = list.filter(c=> c.code.toLowerCase().includes(q) || c.title.toLowerCase().includes(q) || c.subtitle.toLowerCase().includes(q) || c.instructor.toLowerCase().includes(q))
     return list
   },[query, filteredCourses, selectedProgram, selectedSemester])
 
