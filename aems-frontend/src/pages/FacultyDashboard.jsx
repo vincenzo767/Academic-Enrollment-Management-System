@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useApp } from '../state/AppContext.jsx'
 import Modal from '../components/Modal.jsx'
 import styles from '../styles/dashboard.module.css'
@@ -8,6 +8,9 @@ export default function FacultyDashboard() {
   const { setRole } = useApp()
   const [facultyProfile, setFacultyProfile] = useState(null)
   const [selectedSemester, setSelectedSemester] = useState('1st Semester')
+  const [semesterFilter, setSemesterFilter] = useState('All Semesters')
+  const [selectedProgram, setSelectedProgram] = useState('All Programs')
+  const [searchTerm, setSearchTerm] = useState('')
   const [enrollmentStats, setEnrollmentStats] = useState({
     pendingEnrollments: 0,
     approvedToday: 0,
@@ -37,6 +40,18 @@ export default function FacultyDashboard() {
 
   const semesters = ['1st Semester', '2nd Semester', 'Summer']
 
+  const normalizeSemester = (value) => {
+    const s = (value || '').toString().toLowerCase().trim()
+    if (!s) return ''
+    if (s.startsWith('1')) return '1st semester'
+    if (s.startsWith('first')) return '1st semester'
+    if (s.startsWith('2')) return '2nd semester'
+    if (s.startsWith('second')) return '2nd semester'
+    if (s.includes('summer')) return 'summer'
+    if (s.includes('midyear')) return 'summer'
+    return s
+  }
+
   const mergeWithLocalOverrides = (records, overrides) => {
     if (!overrides || typeof overrides !== 'object') return records
     const map = new Map(records.map(r => [String(r.studentId), r]))
@@ -44,11 +59,18 @@ export default function FacultyDashboard() {
       if (!o || !o.studentId) return
       const sid = String(o.studentId)
       const existing = map.get(sid)
-      const base = existing || { studentId: sid, name: o.name || `Student ${sid}`, program: o.program || '—', date: new Date().toISOString().split('T')[0] }
+      const base = existing || {
+        studentId: sid,
+        name: o.name || `Student ${sid}`,
+        program: o.program || '—',
+        semester: o.semester || 'Unspecified',
+        date: new Date().toISOString().split('T')[0]
+      }
       map.set(sid, {
         ...base,
         name: o.name || base.name,
         program: o.program || base.program,
+        semester: o.semester || base.semester || 'Unspecified',
         courseCount: o.courseCount !== undefined ? o.courseCount : (base.courseCount || 0),
         status: o.status || base.status || 'Pending'
       })
@@ -204,10 +226,12 @@ export default function FacultyDashboard() {
             }
           }
           if(!program) program = 'Unknown'
+          const semester = s.semester || s.sem || s.currentSemester || latestEnrollment?.semester || 'Unspecified'
           return {
             studentId: `${s.studentId}`,
             name: `${s.firstname || ''} ${s.lastname || ''}`.trim(),
             program: program,
+            semester,
             courseCount,
             date: latestEnrollment ? latestEnrollment.enrollmentDate : new Date().toISOString().split('T')[0],
             status
@@ -312,6 +336,30 @@ export default function FacultyDashboard() {
       window.removeEventListener('aems:facultyApproval', onApprovalEvent)
     }
   }, [selectedSemester])
+
+  const programOptions = useMemo(() => {
+    const values = Array.from(new Set(studentRecords.map(r => r.program).filter(Boolean)))
+    return ['All Programs', ...values]
+  }, [studentRecords])
+
+  const filteredStudentRecords = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+    const normalizedFilter = normalizeSemester(semesterFilter)
+    return studentRecords.filter(r => {
+      const matchesProgram = selectedProgram === 'All Programs' || r.program === selectedProgram
+      const matchesSemester = semesterFilter === 'All Semesters'
+        || normalizeSemester(r.semester) === normalizedFilter
+      const matchesSearch = term.length === 0 || `${r.name} ${r.studentId} ${r.program}`.toLowerCase().includes(term)
+      return matchesProgram && matchesSemester && matchesSearch
+    })
+  }, [studentRecords, selectedProgram, semesterFilter, searchTerm])
+
+  const filteredStats = useMemo(() => computeStats(filteredStudentRecords), [filteredStudentRecords])
+  const statsToShow = useMemo(() => ({
+    ...enrollmentStats,
+    ...filteredStats,
+    totalStudents: filteredStudentRecords.length
+  }), [enrollmentStats, filteredStats, filteredStudentRecords.length])
 
   // Re-filter pending students whenever approvals change
   useEffect(() => {
@@ -456,7 +504,10 @@ export default function FacultyDashboard() {
             <span className={styles.statusLabel}>Select Sem</span>
             <select
               value={selectedSemester}
-              onChange={(e) => setSelectedSemester(e.target.value)}
+              onChange={(e) => {
+                setSelectedSemester(e.target.value)
+                setSemesterFilter(e.target.value)
+              }}
               style={{
                 padding: '8px 12px',
                 background: 'rgba(255, 255, 255, 0.15)',
@@ -490,22 +541,22 @@ export default function FacultyDashboard() {
       <div className={styles.statsGrid}>
         <div className={styles.statBox}>
           <div style={{ fontSize: '24px', marginBottom: '8px' }}>⏱️</div>
-          <div className={styles.statNumber}>{enrollmentStats.pendingEnrollments}</div>
+          <div className={styles.statNumber}>{statsToShow.pendingEnrollments}</div>
           <div className={styles.statLabel}>Pending Enrollments</div>
         </div>
         <div className={styles.statBox}>
           <div style={{ fontSize: '24px', marginBottom: '8px' }}>✅</div>
-          <div className={styles.statNumber}>{enrollmentStats.approvedToday}</div>
+          <div className={styles.statNumber}>{statsToShow.approvedToday}</div>
           <div className={styles.statLabel}>Approved Today</div>
         </div>
         <div className={styles.statBox}>
           <div style={{ fontSize: '24px', marginBottom: '8px' }}>👥</div>
-          <div className={styles.statNumber}>{enrollmentStats.totalStudents}</div>
+          <div className={styles.statNumber}>{statsToShow.totalStudents}</div>
           <div className={styles.statLabel}>Total Students</div>
         </div>
         <div className={styles.statBox}>
           <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚠️</div>
-          <div className={styles.statNumber}>{enrollmentStats.requiresAttention}</div>
+          <div className={styles.statNumber}>{statsToShow.requiresAttention}</div>
           <div className={styles.statLabel}>Requires Attention</div>
         </div>
       </div>
@@ -514,9 +565,41 @@ export default function FacultyDashboard() {
       <div className={styles.enrolledCoursesSection}>
         <h2 className={styles.sectionTitle}>📋 Pending Enrollment Requests</h2>
         
-        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <input placeholder="Search by student name, ID, program, or course..." style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '6px', marginRight: '12px', background: 'var(--card)', color: 'var(--text)' }} />
-          <button style={{ padding: '10px 16px', background: 'var(--accent-2)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>View All</button>
+        <div style={{ marginBottom: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input
+            placeholder="Search by student name, ID, program, or course..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ flex: 1, minWidth: '240px', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card)', color: 'var(--text)' }}
+          />
+          <select
+            value={selectedProgram}
+            onChange={(e) => setSelectedProgram(e.target.value)}
+            style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card)', color: 'var(--text)', minWidth: '180px' }}
+          >
+            {programOptions.map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+          <select
+            value={semesterFilter}
+            onChange={(e) => setSemesterFilter(e.target.value)}
+            style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--card)', color: 'var(--text)', minWidth: '150px' }}
+          >
+            {['All Semesters', ...semesters].map(sem => (
+              <option key={sem} value={sem}>{sem}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => {
+              setSearchTerm('')
+              setSelectedProgram('All Programs')
+              setSemesterFilter('All Semesters')
+            }}
+            style={{ padding: '10px 16px', background: 'var(--accent-2)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+          >
+            View All
+          </button>
         </div>
 
         <div style={{ background: 'var(--card)', borderRadius: '12px', padding: '16px', overflowX: 'auto', border: '1px solid var(--border)' }}>
@@ -532,13 +615,16 @@ export default function FacultyDashboard() {
               </tr>
             </thead>
             <tbody>
-              {studentRecords.map((record, idx) => (
+              {filteredStudentRecords.map((record, idx) => (
                 <tr key={idx} style={{ borderBottom: '1px solid var(--border)', background: 'var(--card)' }}>
                   <td style={{ padding: '12px' }}>
                     <div style={{ fontWeight: '600', color: 'var(--text)' }}>{record.name}</div>
                     <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{record.studentId}</div>
                   </td>
-                  <td style={{ padding: '12px', color: 'var(--text)' }}>{record.program}</td>
+                  <td style={{ padding: '12px', color: 'var(--text)' }}>
+                    <div>{record.program}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{record.semester || 'Unspecified'}</div>
+                  </td>
                   <td style={{ padding: '12px', fontWeight: '700', color: 'var(--text)' }}>{record.courseCount ?? 0}</td>
                   <td style={{ padding: '12px', color: 'var(--text)' }}>{record.date}</td>
                   <td style={{ padding: '12px' }}>

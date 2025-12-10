@@ -309,6 +309,7 @@ export function AppProvider({children}){
       studentId: String(sid),
       name: studentProfile?.fullName || '',
       program: studentProfile?.program || '—',
+      semester: studentProfile?.semester || studentProfile?.currentSemester || '',
       courseCount: overrides.courseCount !== undefined ? overrides.courseCount : enrolledIds.length,
       status: overrides.status || (registrationSubmitted ? 'Registered' : 'Pending'),
       updatedAt: Date.now()
@@ -384,6 +385,8 @@ export function AppProvider({children}){
           units: c.credits || c.units || 0,
           instructor: c.instructorId ? String(c.instructorId) : (c.instructor || ''),
           schedule: c.schedule || '',
+          program: c.program || c.programName || 'Unspecified Program',
+          semester: c.semester || c.term || 'Unspecified',
         }))
         setCourses(mapped)
       } catch (e) {
@@ -402,7 +405,16 @@ export function AppProvider({children}){
       })
       if(!res.ok) throw new Error('Create failed')
       const created = await res.json()
-      setCourses(prev => [{ id: created.courseId, code: created.courseCode, title: created.title, subtitle: created.description, units: created.credits, instructor: created.instructorId ? String(created.instructorId) : '' }, ...prev])
+      setCourses(prev => [{
+        id: created.courseId,
+        code: created.courseCode,
+        title: created.title,
+        subtitle: created.description,
+        units: created.credits,
+        instructor: created.instructorId ? String(created.instructorId) : '',
+        program: created.program || 'Unspecified Program',
+        semester: created.semester || created.term || 'Unspecified'
+      }, ...prev])
       return created
     } catch (e) {
       console.error(e)
@@ -415,7 +427,16 @@ export function AppProvider({children}){
       const res = await fetch(`http://localhost:8080/api/courses/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(course) })
       if(!res.ok) throw new Error('Update failed')
       const updated = await res.json()
-      setCourses(prev => prev.map(c => c.id === updated.courseId ? { id: updated.courseId, code: updated.courseCode, title: updated.title, subtitle: updated.description, units: updated.credits, instructor: updated.instructorId ? String(updated.instructorId) : '' } : c))
+      setCourses(prev => prev.map(c => c.id === updated.courseId ? {
+        id: updated.courseId,
+        code: updated.courseCode,
+        title: updated.title,
+        subtitle: updated.description,
+        units: updated.credits,
+        instructor: updated.instructorId ? String(updated.instructorId) : '',
+        program: updated.program || c.program || 'Unspecified Program',
+        semester: updated.semester || updated.term || c.semester || 'Unspecified'
+      } : c))
       return updated
     } catch(e){ console.error(e); throw e }
   }
@@ -616,17 +637,19 @@ export function AppProvider({children}){
     return {units, perUnit, total: units * perUnit}
   },[courses,reservedIds,enrolledIds])
 
-  // Logout function: clears user-specific data from storage
-  const logout = () => {
+  // Logout function: keep persisted data by default so users retain enrollments after re-login
+  const logout = ({ clearStoredData = false } = {}) => {
     try {
-      storageManager.clearUserData()
-      const context = { addNotification: (opts) => setNotifications(prev => [{ id: Date.now(), ...opts }, ...prev]) }
-      notifyDataCleared(context)
+      if (clearStoredData) {
+        storageManager.clearUserData()
+        const context = { addNotification: (opts) => setNotifications(prev => [{ id: Date.now(), ...opts }, ...prev]) }
+        notifyDataCleared(context)
+      }
     } catch (e) {
       console.error('Error during logout:', e)
     }
     
-    // Reset user state
+    // Reset in-memory session state; persisted data remains for the user
     setRole(null)
     setStudentProfile(getEmptyProfile())
     setReservedIds([])

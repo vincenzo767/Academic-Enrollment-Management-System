@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Modal from '../components/Modal'
 import { useApp } from '../state/AppContext.jsx'
 
@@ -15,6 +15,9 @@ export default function FacultyCourses(){
     avgEnrollmentPerStudent: 0
   })
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [programFilter, setProgramFilter] = useState('All Programs')
+  const [semesterFilter, setSemesterFilter] = useState('All Semesters')
 
   // Fetch real-time statistics
   useEffect(() => {
@@ -37,6 +40,31 @@ export default function FacultyCourses(){
     const interval = setInterval(fetchStatistics, 30000)
     return () => clearInterval(interval)
   }, [])
+
+  const programOptions = useMemo(() => {
+    const unique = new Set()
+    courses.forEach(c => {
+      if (c.program) unique.add(c.program)
+    })
+    return ['All Programs', ...Array.from(unique)]
+  }, [courses])
+
+  const semesterOptions = useMemo(() => {
+    const base = ['All Semesters', '1st Semester', '2nd Semester', 'Summer']
+    const extra = new Set()
+    courses.forEach(c => { if (c.semester) extra.add(c.semester) })
+    return [...new Set([...base, ...Array.from(extra)])]
+  }, [courses])
+
+  const filteredCourses = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+    return courses.filter((c) => {
+      const matchesProgram = programFilter === 'All Programs' || c.program === programFilter
+      const matchesSemester = semesterFilter === 'All Semesters' || (c.semester || '').toLowerCase() === semesterFilter.toLowerCase()
+      const matchesSearch = term.length === 0 || `${c.code} ${c.title} ${c.subtitle} ${c.instructor}`.toLowerCase().includes(term)
+      return matchesProgram && matchesSemester && matchesSearch
+    })
+  }, [courses, programFilter, semesterFilter, searchTerm])
 
   // Function to refresh statistics manually
   const refreshStatistics = async () => {
@@ -128,8 +156,33 @@ export default function FacultyCourses(){
         </div>
       </div>
 
-      <div style={{margin:'16px 0'}}>
-        <input placeholder="Search by course, name, code or department.." style={{width:'100%',padding:12,border:'1px solid var(--border)',borderRadius:8,background:'var(--card)',color:'var(--text)'}} />
+      <div style={{margin:'16px 0', display:'flex', gap:12, flexWrap:'wrap'}}>
+        <input
+          placeholder="Search by course, name, code or department.."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{flex:1,minWidth:200,padding:12,border:'1px solid var(--border)',borderRadius:8,background:'var(--card)',color:'var(--text)'}}
+        />
+        <select
+          value={programFilter}
+          onChange={(e) => setProgramFilter(e.target.value)}
+          style={{padding:12,border:'1px solid var(--border)',borderRadius:8,background:'var(--card)',color:'var(--text)'}}
+        >
+          {programOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+        </select>
+        <select
+          value={semesterFilter}
+          onChange={(e) => setSemesterFilter(e.target.value)}
+          style={{padding:12,border:'1px solid var(--border)',borderRadius:8,background:'var(--card)',color:'var(--text)'}}
+        >
+          {semesterOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+        </select>
+        <button
+          onClick={() => { setSearchTerm(''); setProgramFilter('All Programs'); setSemesterFilter('All Semesters') }}
+          style={{padding:'12px 16px',background:'var(--accent-2)',color:'white',border:'none',borderRadius:8,cursor:'pointer',fontWeight:600}}
+        >
+          Clear Filters
+        </button>
       </div>
 
       <div style={{background:'var(--card)',borderRadius:12,padding:16,border:'1px solid var(--border)'}}>
@@ -147,12 +200,18 @@ export default function FacultyCourses(){
             </tr>
           </thead>
           <tbody>
-            {courses.map((r)=> (
+            {filteredCourses.map((r)=> (
               <tr key={r.id || r.courseId}>
                 <td>{r.code}</td>
-                <td>{r.title}</td>
+                <td>
+                  <div>{r.title}</div>
+                  <div style={{fontSize:12,color:'var(--text-secondary)'}}>{r.program || 'Unspecified Program'}</div>
+                </td>
                 <td>{r.instructor}</td>
-                <td>{r.dept || ''}</td>
+                <td>
+                  <div>{r.dept || ''}</div>
+                  <div style={{fontSize:12,color:'var(--text-secondary)'}}>{r.semester || 'Unspecified'}</div>
+                </td>
                 <td>{r.units}</td>
                 <td>{r.enroll || ''}</td>
                 <td>
