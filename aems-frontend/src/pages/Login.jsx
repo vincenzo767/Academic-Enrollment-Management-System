@@ -52,11 +52,7 @@ export default function Login(){
   }
 
   return (
-    <div className={styles.hero}>      
-      <header className={styles.topbar}>
-        <div className={styles.brand}>AEMS: Academic Enrollment Management System</div>
-        <a className={styles.about} href="#about">About us</a>
-      </header>
+    <div className={styles.hero}>
       <div className={styles.centerBox}>
         <form onSubmit={submit} className={styles.card}>
           <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Enter email" />
